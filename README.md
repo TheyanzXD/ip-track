@@ -50,8 +50,8 @@
 ## 🖼️ Screenshots
 
 <div align="center">
-  <img src="https://raw.githubusercontent.com/TheyanzXD/assets/refs/heads/main/data1.jpg" width="49%" alt="Dashboard" />
-  <img src="https://raw.githubusercontent.com/TheyanzXD/assets/refs/heads/main/data_api.jpg" width="49%" alt="Api docs" />
+  <img src="https://raw.githubusercontent.com/TheyanzXD/assets/refs/heads/main/IMG_20260729_154321.jpg" width="49%" alt="Dashboard" />
+  <img src="https://raw.githubusercontent.com/TheyanzXD/assets/refs/heads/main/IMG_20260729_154345.jpg" width="49%" alt="Api docs" />
 </div>
 
 <br>
