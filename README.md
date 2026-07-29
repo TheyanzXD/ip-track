@@ -50,12 +50,9 @@
 ## 🖼️ Screenshots
 
 <div align="center">
-  <img src="https://via.placeholder.com/800x450.png?text=NetUtils+Dashboard" width="49%" alt="Dashboard screenshot" />
-  <img src="https://via.placeholder.com/800x450.png?text=API+Docs" width="49%" alt="API docs screenshot" />
+  <img src="https://ibb.co.com/gZqstJj8" width="49%" alt="Deskripsi 1" />
+  <img src="https://ibb.co.com/1GwYHsr4" width="49%" alt="Deskripsi 2" />
 </div>
-
-> [!NOTE]
-> Replace the placeholder images above with real screenshots — drop them in a `/screenshots` folder and update the paths.
 
 <br>
 
