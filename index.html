@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NetUtils - Network Diagnostic Tools</title>
+  <meta name="description" content="Free online network diagnostic tools: IP lookup, DNS checker, HTTP header analyzer, port scanner, and SSL/TLS certificate checker.">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%2338bdf8'/%3E%3Ctext x='50' y='68' font-size='50' text-anchor='middle' fill='white' font-family='sans-serif' font-weight='bold'%3EN%3C/text%3E%3C/svg%3E">
+</head>
+<body>
+
+  <header>
+    <div class="container">
+      <a href="/" class="logo">
+        <div class="logo-icon">🌐</div>
+        <div>
+          <h1>NetUtils</h1>
+          <span>Network Diagnostic Tools</span>
+        </div>
+      </a>
+      <div style="display:flex;gap:8px">
+        <a href="/docs" class="btn btn-sm btn-primary" style="text-decoration:none">📖 API Docs</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="container">
+    <div class="tabs">
+      <button class="tab active" data-target="card-ip">🌐 IP Info</button>
+      <button class="tab" data-target="card-dns">📡 DNS Lookup</button>
+      <button class="tab" data-target="card-headers">📋 HTTP Headers</button>
+      <button class="tab" data-target="card-portscan">🔌 Port Scan</button>
+      <button class="tab" data-target="card-ssl">🔒 SSL Check</button>
+    </div>
+
+    <!-- IP Info -->
+    <div class="card active" id="card-ip">
+      <h2>🌐 IP Address Information</h2>
+      <p>Find details about any IP address or domain — location, ISP, organization, and more. Your current IP is fetched automatically.</p>
+
+      <div class="auto-banner">ℹ️ Your IP information is loaded automatically below. Use the form to look up any IP or domain.</div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>IP Address or Domain</label>
+          <input type="text" id="ip-input" placeholder="e.g. 8.8.8.8 or google.com">
+        </div>
+        <div class="form-group" style="flex:0;min-width:auto">
+          <label>&nbsp;</label>
+          <button class="btn btn-primary" id="ip-lookup-btn">Lookup</button>
+        </div>
+      </div>
+
+      <div class="auto-banner" style="margin-top:8px;background:rgba(239,68,68,0.05);border-color:rgba(239,68,68,0.15);color:var(--text-secondary);font-size:12px">
+        ⚖️ <strong>Disclaimer:</strong> This tool displays IP address information for diagnostic and educational purposes only. Use only for your own IP addresses or systems you have permission to investigate.
+      </div>
+
+      <div class="loading" id="ip-loading"><div class="spinner"></div><p>Fetching IP information...</p></div>
+      <div class="error" id="ip-error"></div>
+      <div class="result" id="ip-result">
+        <div class="result-header"><span class="badge badge-success">Data Retrieved</span></div>
+        <div class="data-grid" id="ip-data"></div>
+      </div>
+    </div>
+
+    <!-- DNS Lookup -->
+    <div class="card" id="card-dns">
+      <h2>📡 DNS Lookup</h2>
+      <p>Query DNS records for any domain — A, AAAA, MX, TXT, NS, CNAME, SOA, and SRV records.</p>
+
+      <div class="form-row">
+        <div class="form-group" style="flex:2">
+          <label>Domain</label>
+          <input type="text" id="dns-input" placeholder="e.g. example.com">
+        </div>
+        <div class="form-group" style="flex:1">
+          <label>Record Type</label>
+          <select id="dns-type">
+            <option value="ALL">All Records</option>
+            <option value="A">A (IPv4)</option>
+            <option value="AAAA">AAAA (IPv6)</option>
+            <option value="MX">MX (Mail Exchange)</option>
+            <option value="TXT">TXT (Text)</option>
+            <option value="NS">NS (Nameserver)</option>
+            <option value="CNAME">CNAME (Canonical Name)</option>
+            <option value="SOA">SOA (Start of Authority)</option>
+            <option value="SRV">SRV (Service)</option>
+          </select>
+        </div>
+        <div class="form-group" style="flex:0;min-width:auto">
+          <label>&nbsp;</label>
+          <button class="btn btn-primary" id="dns-lookup-btn">Lookup</button>
+        </div>
+      </div>
+
+      <div class="loading" id="dns-loading"><div class="spinner"></div><p>Looking up DNS records...</p></div>
+      <div class="error" id="dns-error"></div>
+      <div class="result" id="dns-result">
+        <div class="result-header">
+          <span class="badge badge-success">DNS Records for <span id="dns-domain"></span></span>
+        </div>
+        <div id="dns-records"></div>
+      </div>
+    </div>
+
+    <!-- HTTP Headers -->
+    <div class="card" id="card-headers">
+      <h2>📋 HTTP Header Checker</h2>
+      <p>Analyze HTTP response headers from any URL. Useful for debugging security headers, caching, and server configuration.</p>
+
+      <div class="form-row">
+        <div class="form-group" style="flex:2">
+          <label>URL</label>
+          <input type="text" id="headers-input" placeholder="e.g. https://example.com">
+        </div>
+        <div class="form-group" style="flex:0;min-width:auto">
+          <label>&nbsp;</label>
+          <button class="btn btn-primary" id="headers-lookup-btn">Check</button>
+        </div>
+      </div>
+
+      <div class="loading" id="headers-loading"><div class="spinner"></div><p>Fetching HTTP headers...</p></div>
+      <div class="error" id="headers-error"></div>
+      <div class="result" id="headers-result">
+        <div class="result-header"><span class="badge badge-success">Response Data</span></div>
+        <div class="data-grid" id="headers-general" style="margin-bottom:16px"></div>
+        <h3 style="font-size:13px;text-transform:uppercase;color:var(--text-secondary);margin-bottom:8px;letter-spacing:0.5px">Response Headers</h3>
+        <table class="headers-table"><thead><tr><th style="width:30%">Header</th><th>Value</th></tr></thead><tbody id="headers-table-body"></tbody></table>
+      </div>
+    </div>
+
+    <!-- Port Scan -->
+    <div class="card" id="card-portscan">
+      <h2>🔌 Port Scanner</h2>
+      <p>Scan common ports on any host to check which services are accessible. Limited to <strong>50 ports max</strong> per scan for security.</p>
+
+      <div class="form-row">
+        <div class="form-group" style="flex:2">
+          <label>Hostname or IP</label>
+          <input type="text" id="portscan-input" placeholder="e.g. example.com or 8.8.8.8">
+        </div>
+        <div class="form-group" style="flex:1">
+          <label>Ports (optional, comma-separated)</label>
+          <input type="text" id="portscan-ports" placeholder="21,22,80,443,8080 (default: common ports)">
+        </div>
+        <div class="form-group" style="flex:0;min-width:auto">
+          <label>&nbsp;</label>
+          <button class="btn btn-primary" id="portscan-btn">Scan</button>
+        </div>
+      </div>
+
+      <div class="auto-banner" style="background:rgba(245,158,11,0.08);border-color:rgba(245,158,11,0.2);color:var(--warning)">
+        ⚠️ Only scan hosts you own or have explicit permission to test. Unauthorized scanning may be illegal.
+      </div>
+
+      <div class="loading" id="portscan-loading"><div class="spinner"></div><p>Scanning ports...</p></div>
+      <div class="error" id="portscan-error"></div>
+      <div class="result" id="portscan-result">
+        <div class="result-header"><span class="badge badge-success">Scan Results</span></div>
+        <div class="data-grid" id="portscan-summary" style="margin-bottom:16px"></div>
+        <h3 style="font-size:13px;text-transform:uppercase;color:var(--text-secondary);margin-bottom:8px;letter-spacing:0.5px">Port Status</h3>
+        <div class="port-results" id="portscan-list"></div>
+      </div>
+    </div>
+
+    <!-- SSL Checker -->
+    <div class="card" id="card-ssl">
+      <h2>🔒 SSL/TLS Certificate Checker</h2>
+      <p>Inspect SSL/TLS certificate details for any domain — issuer, validity period, cipher, and more.</p>
+
+      <div class="form-row">
+        <div class="form-group" style="flex:2">
+          <label>Domain</label>
+          <input type="text" id="ssl-input" placeholder="e.g. google.com">
+        </div>
+        <div class="form-group" style="flex:1">
+          <label>Port</label>
+          <select id="ssl-port">
+            <option value="443">443 (HTTPS)</option>
+            <option value="8443">8443</option>
+            <option value="465">465 (SMTPS)</option>
+            <option value="993">993 (IMAPS)</option>
+            <option value="995">995 (POP3S)</option>
+          </select>
+        </div>
+        <div class="form-group" style="flex:0;min-width:auto">
+          <label>&nbsp;</label>
+          <button class="btn btn-primary" id="ssl-check-btn">Check</button>
+        </div>
+      </div>
+
+      <div class="loading" id="ssl-loading"><div class="spinner"></div><p>Checking SSL certificate...</p></div>
+      <div class="error" id="ssl-error"></div>
+      <div class="result" id="ssl-result">
+        <div class="result-header"><span class="badge badge-success">Certificate Info</span></div>
+        <div class="data-grid" id="ssl-data"></div>
+      </div>
+    </div>
+
+  </main>
+
+  <footer>
+    <div class="container">
+      <p>
+        <strong>NetUtils</strong> — Free network diagnostic tools.
+        <br>
+        Built with Node.js serverless functions on Vercel.
+        <br>
+        <a href="/docs">API Documentation</a>
+      </p>
+
+      <div class="disclaimer">
+        <strong>⚠️ Legal &amp; Ethical Disclaimer</strong><br>
+        <strong>IP Information / Grabber:</strong> This tool displays IP address information for educational and diagnostic purposes only. It is designed to show your own public IP information or to look up IP addresses/domains you own or have permission to investigate. Do not use this tool to track individuals without their explicit consent.<br><br>
+        <strong>Port Scanner &amp; Security Tools:</strong> Only use these tools on systems you own or have explicit written permission to test. Unauthorized scanning, probing, or testing of systems may violate applicable laws and regulations.<br><br>
+        <strong>Data Privacy:</strong> We do not store, log, or retain any IP addresses, domain lookups, or scan results. All data is processed in real-time and discarded immediately after each request.
+      </div>
+    </div>
+  </footer>
+
+  <div class="toast" id="toast"></div>
+
+  <script src="/js/main.js"></script>
+</body>
+</html>

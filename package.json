@@ -1,0 +1,7 @@
+{
+  "name": "network-utils",
+  "version": "1.0.0",
+  "description": "Network utilities toolkit - IP info, DNS, port scanner, SSL checker, HTTP headers",
+  "private": true,
+  "dependencies": {}
+}

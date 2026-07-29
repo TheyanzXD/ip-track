@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>API Documentation - NetworkUtils</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%2338bdf8'/%3E%3Ctext x='50' y='68' font-size='50' text-anchor='middle' fill='white' font-family='sans-serif' font-weight='bold'%3EN%3C/text%3E%3C/svg%3E">
+  <style>
+    .endpoint { margin-bottom: 32px; }
+    .endpoint h3 { font-size: 18px; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+    .endpoint-url {
+      display: inline-block; background: rgba(56,189,248,0.1);
+      border: 1px solid rgba(56,189,248,0.2); border-radius: 6px;
+      padding: 6px 14px; font-family: 'SF Mono', 'Fira Code', monospace;
+      font-size: 14px; color: var(--accent); margin-bottom: 12px;
+    }
+    .param-table { width: 100%; border-collapse: collapse; font-size: 14px; margin: 12px 0; }
+    .param-table th {
+      text-align: left; padding: 8px 12px; background: var(--bg-primary);
+      border-bottom: 2px solid var(--border); color: var(--text-secondary);
+      text-transform: uppercase; font-size: 11px; letter-spacing: 0.5px;
+    }
+    .param-table td { padding: 8px 12px; border-bottom: 1px solid var(--border); }
+    .param-table tr:hover td { background: rgba(56,189,248,0.03); }
+    .tag { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 700; margin-right: 4px; }
+    .tag-required { background: rgba(239,68,68,0.2); color: var(--error); }
+    .tag-optional { background: rgba(56,189,248,0.2); color: var(--accent); }
+    .tag-get { background: rgba(34,197,94,0.2); color: var(--success); }
+    pre {
+      background: #0d1117; border: 1px solid var(--border); border-radius: 8px;
+      padding: 16px; overflow-x: auto; font-family: 'SF Mono', 'Fira Code', monospace;
+      font-size: 13px; margin: 8px 0; color: #e6edf3;
+    }
+    pre .string { color: #a5d6ff; }
+    pre .key { color: #ffa657; }
+    pre .boolean { color: #79c0ff; }
+    pre .null { color: #79c0ff; }
+    pre .number { color: #79c0ff; }
+    .toc { position: sticky; top: 80px; }
+    .toc a { display: block; padding: 6px 0; color: var(--text-secondary); text-decoration: none; font-size: 14px; transition: color 0.2s; }
+    .toc a:hover { color: var(--accent); }
+    .toc a.active { color: var(--accent); }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="container">
+      <a href="/" class="logo">
+        <div class="logo-icon">🌐</div>
+        <div>
+          <h1>NetUtils</h1>
+          <span>API Documentation</span>
+        </div>
+      </a>
+      <div style="display:flex;gap:8px">
+        <a href="/" class="btn btn-sm btn-primary" style="text-decoration:none">⬅ Back to App</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="container">
+    <div style="display:grid;grid-template-columns:220px 1fr;gap:32px">
+      <div class="toc">
+        <h4 style="font-size:13px;text-transform:uppercase;letter-spacing:0.5px;color:var(--text-secondary);margin-bottom:12px">Endpoints</h4>
+        <a href="#endpoint-ip">IP Info</a>
+        <a href="#endpoint-dns">DNS Lookup</a>
+        <a href="#endpoint-headers">HTTP Headers</a>
+        <a href="#endpoint-portscan">Port Scanner</a>
+        <a href="#endpoint-ssl">SSL Checker</a>
+        <a href="#errors">Error Codes</a>
+        <a href="#rate">Rate Limits</a>
+      </div>
+
+      <div>
+        <h2 style="font-size:24px;margin-bottom:8px">📖 API Documentation</h2>
+        <p style="color:var(--text-secondary);margin-bottom:24px">
+          Base URL: <code style="background:var(--bg-card-hover);padding:2px 8px;border-radius:4px">https://network-utils.vercel.app</code>
+          <br>
+          All endpoints return JSON: <code>{ status, message, data }</code>
+        </p>
+
+        <div class="endpoint" id="endpoint-ip">
+          <h3><span class="tag tag-get">GET</span> IP Address Information</h3>
+          <div class="endpoint-url">/api/ip?data={value}</div>
+          <table class="param-table">
+            <thead><tr><th>Parameter</th><th>Type</th><th>Required</th><th>Description</th></tr></thead>
+            <tbody>
+              <tr><td><code>data</code></td><td>string</td><td><span class="tag tag-optional">Optional</span></td><td>IP or domain. Empty = requesting IP.</td></tr>
+            </tbody>
+          </table>
+          <pre>GET /api/ip?data=8.8.8.8</pre>
+          <pre>{
+  <span class="key">"status"</span>: <span class="string">"success"</span>,
+  <span class="key">"message"</span>: <span class="string">"IP information retrieved"</span>,
+  <span class="key">"data"</span>: {
+    <span class="key">"ip"</span>: <span class="string">"8.8.8.8"</span>,
+    <span class="key">"country"</span>: <span class="string">"United States"</span>,
+    <span class="key">"region"</span>: <span class="string">"California"</span>,
+    <span class="key">"city"</span>: <span class="string">"Mountain View"</span>,
+    <span class="key">"isp"</span>: <span class="string">"Google LLC"</span>,
+    <span class="key">"organization"</span>: <span class="string">"Google LLC"</span>,
+    <span class="key">"asn"</span>: <span class="string">"AS15169"</span>,
+    <span class="key">"timezone"</span>: <span class="string">"America/Los_Angeles"</span>,
+    <span class="key">"latitude"</span>: <span class="number">37.4056</span>,
+    <span class="key">"longitude"</span>: <span class="number">-122.0775</span>,
+    <span class="key">"proxy"</span>: <span class="boolean">false</span>,
+    <span class="key">"hosting"</span>: <span class="boolean">true</span>
+  }
+}</pre>
+        </div>
+
+        <div class="endpoint" id="endpoint-dns">
+          <h3><span class="tag tag-get">GET</span> DNS Lookup</h3>
+          <div class="endpoint-url">/api/dns?data={domain}&type={record_type}</div>
+          <table class="param-table">
+            <thead><tr><th>Parameter</th><th>Type</th><th>Required</th><th>Description</th></tr></thead>
+            <tbody>
+              <tr><td><code>data</code></td><td>string</td><td><span class="tag tag-required">Required</span></td><td>Domain name (e.g. example.com)</td></tr>
+              <tr><td><code>type</code></td><td>string</td><td><span class="tag tag-optional">Optional</span></td><td>A, AAAA, MX, TXT, NS, CNAME, SOA, SRV, ALL (default)</td></tr>
+            </tbody>
+          </table>
+          <pre>GET /api/dns?data=example.com&type=MX</pre>
+          <pre>{
+  <span class="key">"status"</span>: <span class="string">"success"</span>,
+  <span class="key">"message"</span>: <span class="string">"DNS records retrieved"</span>,
+  <span class="key">"data"</span>: {
+    <span class="key">"domain"</span>: <span class="string">"example.com"</span>,
+    <span class="key">"records"</span>: {
+      <span class="key">"A"</span>: [<span class="string">"93.184.216.34"</span>],
+      <span class="key">"MX"</span>: [{ <span class="key">"exchange"</span>: <span class="string">"mail.example.com"</span>, <span class="key">"priority"</span>: <span class="number">10</span> }]
+    },
+    <span class="key">"errors"</span>: <span class="null">null</span>
+  }
+}</pre>
+        </div>
+
+        <div class="endpoint" id="endpoint-headers">
+          <h3><span class="tag tag-get">GET</span> HTTP Header Checker</h3>
+          <div class="endpoint-url">/api/headers?data={url}</div>
+          <table class="param-table">
+            <thead><tr><th>Parameter</th><th>Type</th><th>Required</th><th>Description</th></tr></thead>
+            <tbody>
+              <tr><td><code>data</code></td><td>string</td><td><span class="tag tag-required">Required</span></td><td>URL. Scheme optional; defaults to HTTPS.</td></tr>
+            </tbody>
+          </table>
+          <pre>GET /api/headers?data=https://example.com</pre>
+          <pre>{
+  <span class="key">"status"</span>: <span class="string">"success"</span>,
+  <span class="key">"message"</span>: <span class="string">"HTTP headers retrieved"</span>,
+  <span class="key">"data"</span>: {
+    <span class="key">"url"</span>: <span class="string">"https://example.com"</span>,
+    <span class="key">"statusCode"</span>: <span class="number">200</span>,
+    <span class="key">"statusMessage"</span>: <span class="string">"OK"</span>,
+    <span class="key">"headers"</span>: { <span class="key">"content-type"</span>: <span class="string">"text/html; charset=UTF-8"</span>, <span class="key">"server"</span>: <span class="string">"ECS"</span> }
+  }
+}</pre>
+        </div>
+
+        <div class="endpoint" id="endpoint-portscan">
+          <h3><span class="tag tag-get">GET</span> Port Scanner</h3>
+          <div class="endpoint-url">/api/portscan?data={host}&ports={ports}</div>
+          <table class="param-table">
+            <thead><tr><th>Parameter</th><th>Type</th><th>Required</th><th>Description</th></tr></thead>
+            <tbody>
+              <tr><td><code>data</code></td><td>string</td><td><span class="tag tag-required">Required</span></td><td>Hostname or IP address.</td></tr>
+              <tr><td><code>ports</code></td><td>string</td><td><span class="tag tag-optional">Optional</span></td><td>Comma-separated ports. Max 50. Default: common ports.</td></tr>
+            </tbody>
+          </table>
+          <pre>GET /api/portscan?data=example.com&ports=80,443,8080</pre>
+          <pre>{
+  <span class="key">"status"</span>: <span class="string">"success"</span>,
+  <span class="key">"message"</span>: <span class="string">"Port scan completed"</span>,
+  <span class="key">"data"</span>: {
+    <span class="key">"host"</span>: <span class="string">"example.com"</span>,
+    <span class="key">"totalScanned"</span>: <span class="number">3</span>,
+    <span class="key">"open"</span>: <span class="number">2</span>,
+    <span class="key">"results"</span>: [
+      { <span class="key">"port"</span>: <span class="number">80</span>, <span class="key">"status"</span>: <span class="string">"open"</span>, <span class="key">"service"</span>: <span class="string">"HTTP"</span> },
+      { <span class="key">"port"</span>: <span class="number">443</span>, <span class="key">"status"</span>: <span class="string">"open"</span>, <span class="key">"service"</span>: <span class="string">"HTTPS"</span> },
+      { <span class="key">"port"</span>: <span class="number">8080</span>, <span class="key">"status"</span>: <span class="string">"closed"</span>, <span class="key">"service"</span>: <span class="string">"HTTP-Alt"</span> }
+    ]
+  }
+}</pre>
+        </div>
+
+        <div class="endpoint" id="endpoint-ssl">
+          <h3><span class="tag tag-get">GET</span> SSL/TLS Certificate Checker</h3>
+          <div class="endpoint-url">/api/ssl?data={domain}&port={port}</div>
+          <table class="param-table">
+            <thead><tr><th>Parameter</th><th>Type</th><th>Required</th><th>Description</th></tr></thead>
+            <tbody>
+              <tr><td><code>data</code></td><td>string</td><td><span class="tag tag-required">Required</span></td><td>Domain name (e.g. google.com)</td></tr>
+              <tr><td><code>port</code></td><td>integer</td><td><span class="tag tag-optional">Optional</span></td><td>Port (default: 443)</td></tr>
+            </tbody>
+          </table>
+          <pre>GET /api/ssl?data=google.com</pre>
+          <pre>{
+  <span class="key">"status"</span>: <span class="string">"success"</span>,
+  <span class="key">"message"</span>: <span class="string">"SSL/TLS certificate information retrieved"</span>,
+  <span class="key">"data"</span>: {
+    <span class="key">"host"</span>: <span class="string">"google.com"</span>,
+    <span class="key">"authorized"</span>: <span class="boolean">true</span>,
+    <span class="key">"protocol"</span>: <span class="string">"TLSv1.3"</span>,
+    <span class="key">"certificate"</span>: {
+      <span class="key">"issuer"</span>: { <span class="key">"O"</span>: <span class="string">"Google Trust Services"</span> },
+      <span class="key">"validTo"</span>: <span class="string">"Sep 7 23:59:59 2025 GMT"</span>,
+      <span class="key">"daysRemaining"</span>: <span class="number">42</span>,
+      <span class="key">"isExpired"</span>: <span class="boolean">false</span>
+    }
+  }
+}</pre>
+        </div>
+
+        <div class="endpoint" id="errors">
+          <h3>⚠️ Error Codes</h3>
+          <table class="param-table">
+            <thead><tr><th>HTTP Status</th><th>Description</th></tr></thead>
+            <tbody>
+              <tr><td><code>400</code></td><td>Bad Request — Missing or invalid parameter</td></tr>
+              <tr><td><code>500</code></td><td>Internal Server Error — Upstream service failed</td></tr>
+            </tbody>
+          </table>
+          <p style="color:var(--text-secondary);font-size:14px;margin-top:8px">
+            Error format: <code>{"status": "error", "message": "...", "data": null}</code>
+          </p>
+        </div>
+
+        <div class="endpoint" id="rate">
+          <h3>⏱️ Rate Limits &amp; Constraints</h3>
+          <table class="param-table">
+            <thead><tr><th>Limit</th><th>Value</th></tr></thead>
+            <tbody>
+              <tr><td>IP Info API</td><td>~45 req/min (ip-api.com free tier)</td></tr>
+              <tr><td>Port Scanner</td><td>Max 50 ports per scan</td></tr>
+              <tr><td>Function Timeout</td><td>30 seconds (Vercel Hobby)</td></tr>
+              <tr><td>CORS</td><td>All origins allowed</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+      </div>
+    </div>
+  </main>
+
+  <footer>
+    <div class="container">
+      <p><strong>NetUtils</strong> — Free network diagnostic tools. <a href="/">Back to App</a></p>
+    </div>
+  </footer>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      const links = document.querySelectorAll('.toc a');
+      new IntersectionObserver(entries => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            links.forEach(l => l.classList.remove('active'));
+            const link = document.querySelector(`.toc a[href="#${entry.target.id}"]`);
+            if (link) link.classList.add('active');
+          }
+        });
+      }, { threshold: 0.3 }).observe.apply(null, [document.querySelectorAll('.endpoint')].concat());
+    });
+  </script>
+</body>
+</html>
