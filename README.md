@@ -51,7 +51,7 @@
 
 <div align="center">
   <img src="https://raw.githubusercontent.com/TheyanzXD/assets/refs/heads/main/data1.jpg" width="49%" alt="Dashboard" />
-  <img src="https://ibb.co.com/1GwYHsr4" width="49%" alt="Api docs" />
+  <img src="https://raw.githubusercontent.com/TheyanzXD/assets/refs/heads/main/data_api.jpg" width="49%" alt="Api docs" />
 </div>
 
 <br>
