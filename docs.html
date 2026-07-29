@@ -4,67 +4,58 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>API Documentation - NetworkUtils</title>
+  <meta name="description" content="API documentation for NetworkUtils - free network diagnostic tools API endpoints.">
   <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="stylesheet" href="/css/style.css">
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%2338bdf8'/%3E%3Ctext x='50' y='68' font-size='50' text-anchor='middle' fill='white' font-family='sans-serif' font-weight='bold'%3EN%3C/text%3E%3C/svg%3E">
   <style>
-    .endpoint { margin-bottom: 32px; }
-    .endpoint h3 { font-size: 18px; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
-    .endpoint-url {
-      display: inline-block; background: rgba(56,189,248,0.1);
-      border: 1px solid rgba(56,189,248,0.2); border-radius: 6px;
-      padding: 6px 14px; font-family: 'SF Mono', 'Fira Code', monospace;
-      font-size: 14px; color: var(--accent); margin-bottom: 12px;
-    }
-    .param-table { width: 100%; border-collapse: collapse; font-size: 14px; margin: 12px 0; }
-    .param-table th {
-      text-align: left; padding: 8px 12px; background: var(--bg-primary);
-      border-bottom: 2px solid var(--border); color: var(--text-secondary);
-      text-transform: uppercase; font-size: 11px; letter-spacing: 0.5px;
-    }
-    .param-table td { padding: 8px 12px; border-bottom: 1px solid var(--border); }
-    .param-table tr:hover td { background: rgba(56,189,248,0.03); }
-    .tag { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 700; margin-right: 4px; }
-    .tag-required { background: rgba(239,68,68,0.2); color: var(--error); }
-    .tag-optional { background: rgba(56,189,248,0.2); color: var(--accent); }
-    .tag-get { background: rgba(34,197,94,0.2); color: var(--success); }
-    pre {
-      background: #0d1117; border: 1px solid var(--border); border-radius: 8px;
-      padding: 16px; overflow-x: auto; font-family: 'SF Mono', 'Fira Code', monospace;
-      font-size: 13px; margin: 8px 0; color: #e6edf3;
-    }
-    pre .string { color: #a5d6ff; }
-    pre .key { color: #ffa657; }
-    pre .boolean { color: #79c0ff; }
-    pre .null { color: #79c0ff; }
-    pre .number { color: #79c0ff; }
     .toc { position: sticky; top: 80px; }
-    .toc a { display: block; padding: 6px 0; color: var(--text-secondary); text-decoration: none; font-size: 14px; transition: color 0.2s; }
-    .toc a:hover { color: var(--accent); }
-    .toc a.active { color: var(--accent); }
+    .toc a { display: block; padding: 0.375rem 0; color: #94a3b8; text-decoration: none; font-size: 0.875rem; transition: color 0.2s; }
+    .toc a:hover { color: #38bdf8; }
+    .toc a.active { color: #38bdf8; }
+    .tag { display: inline-block; padding: 2px 8px; border-radius: 0.25rem; font-size: 0.6875rem; font-weight: 700; margin-right: 0.25rem; }
+    .tag-get { background: rgba(34,197,94,0.2); color: #22c55e; }
+    .tag-required { background: rgba(239,68,68,0.2); color: #ef4444; }
+    .tag-optional { background: rgba(56,189,248,0.2); color: #38bdf8; }
+    .endpoint pre {
+      background: #0d1117; border: 1px solid #334155; border-radius: 0.5rem;
+      padding: 1rem; overflow-x: auto; font-family: ui-monospace, SFMono-Regular, 'SF Mono', 'Fira Code', monospace;
+      font-size: 0.8125rem; margin: 0.5rem 0; color: #e6edf3;
+    }
+    .endpoint pre .string { color: #a5d6ff; }
+    .endpoint pre .key { color: #ffa657; }
+    .endpoint pre .boolean { color: #79c0ff; }
+    .endpoint pre .null { color: #79c0ff; }
+    .endpoint pre .number { color: #79c0ff; }
+    ::-webkit-scrollbar { width: 8px; }
+    ::-webkit-scrollbar-track { background: #0f172a; }
+    ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
   </style>
 </head>
-<body>
+<body class="bg-slate-950 text-slate-100 min-h-screen font-sans antialiased">
 
-  <header>
-    <div class="container">
-      <a href="/" class="logo">
-        <div class="logo-icon">🌐</div>
+  <!-- Header -->
+  <header class="sticky top-0 z-50 bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 border-b border-slate-700/50 backdrop-blur-sm">
+    <div class="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between flex-wrap gap-3">
+      <a href="/" class="flex items-center gap-3 no-underline">
+        <div class="w-10 h-10 bg-gradient-to-br from-sky-400 to-indigo-400 rounded-xl flex items-center justify-center text-xl flex-shrink-0">🌐</div>
         <div>
-          <h1>NetUtils</h1>
-          <span>API Documentation</span>
+          <h1 class="text-xl font-bold bg-gradient-to-r from-sky-400 to-indigo-400 bg-clip-text text-transparent">NetUtils</h1>
+          <span class="text-xs text-slate-400">API Documentation</span>
         </div>
       </a>
-      <div style="display:flex;gap:8px">
-        <a href="/" class="btn btn-sm btn-primary" style="text-decoration:none">⬅ Back to App</a>
-      </div>
+      <a href="/" class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg bg-slate-700 text-slate-300 hover:bg-slate-600 hover:text-white transition-all duration-200 no-underline whitespace-nowrap">⬅ Back to App</a>
     </div>
   </header>
 
-  <main class="container">
-    <div style="display:grid;grid-template-columns:220px 1fr;gap:32px">
-      <div class="toc">
-        <h4 style="font-size:13px;text-transform:uppercase;letter-spacing:0.5px;color:var(--text-secondary);margin-bottom:12px">Endpoints</h4>
+  <!-- Main Content -->
+  <main class="max-w-6xl mx-auto px-4 py-6 lg:py-10">
+
+    <div class="flex flex-col lg:grid lg:grid-cols-[220px_1fr] gap-8">
+
+      <!-- Sidebar TOC -->
+      <nav class="toc hidden lg:block">
+        <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Endpoints</h4>
         <a href="#endpoint-ip">IP Info</a>
         <a href="#endpoint-dns">DNS Lookup</a>
         <a href="#endpoint-headers">HTTP Headers</a>
@@ -72,27 +63,61 @@
         <a href="#endpoint-ssl">SSL Checker</a>
         <a href="#errors">Error Codes</a>
         <a href="#rate">Rate Limits</a>
-      </div>
+      </nav>
 
+      <!-- Mobile TOC -->
+      <details class="lg:hidden bg-slate-800 rounded-xl border border-slate-700/70 overflow-hidden">
+        <summary class="px-4 py-3 text-sm font-semibold text-slate-300 cursor-pointer hover:bg-slate-700/50 transition-colors">📖 Jump to Section</summary>
+        <div class="flex flex-col border-t border-slate-700/50">
+          <a href="#endpoint-ip" class="px-4 py-2 text-sm text-slate-400 hover:bg-slate-700/30 hover:text-sky-400 transition-colors no-underline">IP Info</a>
+          <a href="#endpoint-dns" class="px-4 py-2 text-sm text-slate-400 hover:bg-slate-700/30 hover:text-sky-400 transition-colors no-underline">DNS Lookup</a>
+          <a href="#endpoint-headers" class="px-4 py-2 text-sm text-slate-400 hover:bg-slate-700/30 hover:text-sky-400 transition-colors no-underline">HTTP Headers</a>
+          <a href="#endpoint-portscan" class="px-4 py-2 text-sm text-slate-400 hover:bg-slate-700/30 hover:text-sky-400 transition-colors no-underline">Port Scanner</a>
+          <a href="#endpoint-ssl" class="px-4 py-2 text-sm text-slate-400 hover:bg-slate-700/30 hover:text-sky-400 transition-colors no-underline">SSL Checker</a>
+          <a href="#errors" class="px-4 py-2 text-sm text-slate-400 hover:bg-slate-700/30 hover:text-sky-400 transition-colors no-underline">Error Codes</a>
+          <a href="#rate" class="px-4 py-2 text-sm text-slate-400 hover:bg-slate-700/30 hover:text-sky-400 transition-colors no-underline">Rate Limits</a>
+        </div>
+      </details>
+
+      <!-- Content -->
       <div>
-        <h2 style="font-size:24px;margin-bottom:8px">📖 API Documentation</h2>
-        <p style="color:var(--text-secondary);margin-bottom:24px">
-          Base URL: <code style="background:var(--bg-card-hover);padding:2px 8px;border-radius:4px">https://network-utils.vercel.app</code>
-          <br>
-          All endpoints return JSON: <code>{ status, message, data }</code>
-        </p>
 
-        <div class="endpoint" id="endpoint-ip">
-          <h3><span class="tag tag-get">GET</span> IP Address Information</h3>
-          <div class="endpoint-url">/api/ip?data={value}</div>
-          <table class="param-table">
-            <thead><tr><th>Parameter</th><th>Type</th><th>Required</th><th>Description</th></tr></thead>
-            <tbody>
-              <tr><td><code>data</code></td><td>string</td><td><span class="tag tag-optional">Optional</span></td><td>IP or domain. Empty = requesting IP.</td></tr>
-            </tbody>
-          </table>
-          <pre>GET /api/ip?data=8.8.8.8</pre>
-          <pre>{
+        <div class="mb-8">
+          <h2 class="text-2xl font-bold mb-2 flex items-center gap-2">📖 API Documentation</h2>
+          <p class="text-slate-400 text-sm leading-relaxed">
+            Base URL: <code class="bg-slate-800 px-2 py-0.5 rounded text-sm text-sky-400 font-mono">https://network-utils.vercel.app</code>
+            <br>
+            All endpoints return JSON: <code class="bg-slate-800 px-1.5 py-0.5 rounded text-xs font-mono">{ status, message, data }</code>
+          </p>
+        </div>
+
+        <!-- IP Info Endpoint -->
+        <div class="endpoint mb-8 scroll-mt-20" id="endpoint-ip">
+          <div class="bg-slate-800 border border-slate-700/70 rounded-xl p-5 sm:p-6 shadow-lg shadow-black/20">
+            <h3 class="text-lg font-bold mb-3 flex items-center gap-2"><span class="tag tag-get">GET</span> IP Address Information</h3>
+            <div class="inline-block bg-sky-500/10 border border-sky-500/20 rounded-lg px-3.5 py-1.5 font-mono text-sm text-sky-400 mb-3">/api/ip?data={value}</div>
+            <div class="overflow-x-auto rounded-lg border border-slate-700 mb-4">
+              <table class="w-full text-sm border-collapse">
+                <thead>
+                  <tr>
+                    <th class="text-left px-3 py-2 bg-slate-900 border-b-2 border-slate-700 text-slate-400 uppercase text-[11px] tracking-wider">Parameter</th>
+                    <th class="text-left px-3 py-2 bg-slate-900 border-b-2 border-slate-700 text-slate-400 uppercase text-[11px] tracking-wider">Type</th>
+                    <th class="text-left px-3 py-2 bg-slate-900 border-b-2 border-slate-700 text-slate-400 uppercase text-[11px] tracking-wider">Required</th>
+                    <th class="text-left px-3 py-2 bg-slate-900 border-b-2 border-slate-700 text-slate-400 uppercase text-[11px] tracking-wider">Description</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr class="hover:bg-sky-500/[0.03]">
+                    <td class="px-3 py-2 border-b border-slate-700 font-mono">data</td>
+                    <td class="px-3 py-2 border-b border-slate-700">string</td>
+                    <td class="px-3 py-2 border-b border-slate-700"><span class="tag tag-optional">Optional</span></td>
+                    <td class="px-3 py-2 border-b border-slate-700 text-slate-400">IP or domain. Empty = requesting IP.</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <pre>GET /api/ip?data=8.8.8.8</pre>
+            <pre>{
   <span class="key">"status"</span>: <span class="string">"success"</span>,
   <span class="key">"message"</span>: <span class="string">"IP information retrieved"</span>,
   <span class="key">"data"</span>: {
@@ -110,20 +135,42 @@
     <span class="key">"hosting"</span>: <span class="boolean">true</span>
   }
 }</pre>
+          </div>
         </div>
 
-        <div class="endpoint" id="endpoint-dns">
-          <h3><span class="tag tag-get">GET</span> DNS Lookup</h3>
-          <div class="endpoint-url">/api/dns?data={domain}&type={record_type}</div>
-          <table class="param-table">
-            <thead><tr><th>Parameter</th><th>Type</th><th>Required</th><th>Description</th></tr></thead>
-            <tbody>
-              <tr><td><code>data</code></td><td>string</td><td><span class="tag tag-required">Required</span></td><td>Domain name (e.g. example.com)</td></tr>
-              <tr><td><code>type</code></td><td>string</td><td><span class="tag tag-optional">Optional</span></td><td>A, AAAA, MX, TXT, NS, CNAME, SOA, SRV, ALL (default)</td></tr>
-            </tbody>
-          </table>
-          <pre>GET /api/dns?data=example.com&type=MX</pre>
-          <pre>{
+        <!-- DNS Endpoint -->
+        <div class="endpoint mb-8 scroll-mt-20" id="endpoint-dns">
+          <div class="bg-slate-800 border border-slate-700/70 rounded-xl p-5 sm:p-6 shadow-lg shadow-black/20">
+            <h3 class="text-lg font-bold mb-3 flex items-center gap-2"><span class="tag tag-get">GET</span> DNS Lookup</h3>
+            <div class="inline-block bg-sky-500/10 border border-sky-500/20 rounded-lg px-3.5 py-1.5 font-mono text-sm text-sky-400 mb-3">/api/dns?data={domain}&amp;type={record_type}</div>
+            <div class="overflow-x-auto rounded-lg border border-slate-700 mb-4">
+              <table class="w-full text-sm border-collapse">
+                <thead>
+                  <tr>
+                    <th class="text-left px-3 py-2 bg-slate-900 border-b-2 border-slate-700 text-slate-400 uppercase text-[11px] tracking-wider">Parameter</th>
+                    <th class="text-left px-3 py-2 bg-slate-900 border-b-2 border-slate-700 text-slate-400 uppercase text-[11px] tracking-wider">Type</th>
+                    <th class="text-left px-3 py-2 bg-slate-900 border-b-2 border-slate-700 text-slate-400 uppercase text-[11px] tracking-wider">Required</th>
+                    <th class="text-left px-3 py-2 bg-slate-900 border-b-2 border-slate-700 text-slate-400 uppercase text-[11px] tracking-wider">Description</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr class="hover:bg-sky-500/[0.03]">
+                    <td class="px-3 py-2 border-b border-slate-700 font-mono">data</td>
+                    <td class="px-3 py-2 border-b border-slate-700">string</td>
+                    <td class="px-3 py-2 border-b border-slate-700"><span class="tag tag-required">Required</span></td>
+                    <td class="px-3 py-2 border-b border-slate-700 text-slate-400">Domain name (e.g. example.com)</td>
+                  </tr>
+                  <tr class="hover:bg-sky-500/[0.03]">
+                    <td class="px-3 py-2 border-b border-slate-700 font-mono">type</td>
+                    <td class="px-3 py-2 border-b border-slate-700">string</td>
+                    <td class="px-3 py-2 border-b border-slate-700"><span class="tag tag-optional">Optional</span></td>
+                    <td class="px-3 py-2 border-b border-slate-700 text-slate-400">A, AAAA, MX, TXT, NS, CNAME, SOA, SRV, ALL (default)</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <pre>GET /api/dns?data=example.com&type=MX</pre>
+            <pre>{
   <span class="key">"status"</span>: <span class="string">"success"</span>,
   <span class="key">"message"</span>: <span class="string">"DNS records retrieved"</span>,
   <span class="key">"data"</span>: {
@@ -135,19 +182,36 @@
     <span class="key">"errors"</span>: <span class="null">null</span>
   }
 }</pre>
+          </div>
         </div>
 
-        <div class="endpoint" id="endpoint-headers">
-          <h3><span class="tag tag-get">GET</span> HTTP Header Checker</h3>
-          <div class="endpoint-url">/api/headers?data={url}</div>
-          <table class="param-table">
-            <thead><tr><th>Parameter</th><th>Type</th><th>Required</th><th>Description</th></tr></thead>
-            <tbody>
-              <tr><td><code>data</code></td><td>string</td><td><span class="tag tag-required">Required</span></td><td>URL. Scheme optional; defaults to HTTPS.</td></tr>
-            </tbody>
-          </table>
-          <pre>GET /api/headers?data=https://example.com</pre>
-          <pre>{
+        <!-- HTTP Headers Endpoint -->
+        <div class="endpoint mb-8 scroll-mt-20" id="endpoint-headers">
+          <div class="bg-slate-800 border border-slate-700/70 rounded-xl p-5 sm:p-6 shadow-lg shadow-black/20">
+            <h3 class="text-lg font-bold mb-3 flex items-center gap-2"><span class="tag tag-get">GET</span> HTTP Header Checker</h3>
+            <div class="inline-block bg-sky-500/10 border border-sky-500/20 rounded-lg px-3.5 py-1.5 font-mono text-sm text-sky-400 mb-3">/api/headers?data={url}</div>
+            <div class="overflow-x-auto rounded-lg border border-slate-700 mb-4">
+              <table class="w-full text-sm border-collapse">
+                <thead>
+                  <tr>
+                    <th class="text-left px-3 py-2 bg-slate-900 border-b-2 border-slate-700 text-slate-400 uppercase text-[11px] tracking-wider">Parameter</th>
+                    <th class="text-left px-3 py-2 bg-slate-900 border-b-2 border-slate-700 text-slate-400 uppercase text-[11px] tracking-wider">Type</th>
+                    <th class="text-left px-3 py-2 bg-slate-900 border-b-2 border-slate-700 text-slate-400 uppercase text-[11px] tracking-wider">Required</th>
+                    <th class="text-left px-3 py-2 bg-slate-900 border-b-2 border-slate-700 text-slate-400 uppercase text-[11px] tracking-wider">Description</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr class="hover:bg-sky-500/[0.03]">
+                    <td class="px-3 py-2 border-b border-slate-700 font-mono">data</td>
+                    <td class="px-3 py-2 border-b border-slate-700">string</td>
+                    <td class="px-3 py-2 border-b border-slate-700"><span class="tag tag-required">Required</span></td>
+                    <td class="px-3 py-2 border-b border-slate-700 text-slate-400">URL. Scheme optional; defaults to HTTPS.</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <pre>GET /api/headers?data=https://example.com</pre>
+            <pre>{
   <span class="key">"status"</span>: <span class="string">"success"</span>,
   <span class="key">"message"</span>: <span class="string">"HTTP headers retrieved"</span>,
   <span class="key">"data"</span>: {
@@ -157,20 +221,42 @@
     <span class="key">"headers"</span>: { <span class="key">"content-type"</span>: <span class="string">"text/html; charset=UTF-8"</span>, <span class="key">"server"</span>: <span class="string">"ECS"</span> }
   }
 }</pre>
+          </div>
         </div>
 
-        <div class="endpoint" id="endpoint-portscan">
-          <h3><span class="tag tag-get">GET</span> Port Scanner</h3>
-          <div class="endpoint-url">/api/portscan?data={host}&ports={ports}</div>
-          <table class="param-table">
-            <thead><tr><th>Parameter</th><th>Type</th><th>Required</th><th>Description</th></tr></thead>
-            <tbody>
-              <tr><td><code>data</code></td><td>string</td><td><span class="tag tag-required">Required</span></td><td>Hostname or IP address.</td></tr>
-              <tr><td><code>ports</code></td><td>string</td><td><span class="tag tag-optional">Optional</span></td><td>Comma-separated ports. Max 50. Default: common ports.</td></tr>
-            </tbody>
-          </table>
-          <pre>GET /api/portscan?data=example.com&ports=80,443,8080</pre>
-          <pre>{
+        <!-- Port Scanner Endpoint -->
+        <div class="endpoint mb-8 scroll-mt-20" id="endpoint-portscan">
+          <div class="bg-slate-800 border border-slate-700/70 rounded-xl p-5 sm:p-6 shadow-lg shadow-black/20">
+            <h3 class="text-lg font-bold mb-3 flex items-center gap-2"><span class="tag tag-get">GET</span> Port Scanner</h3>
+            <div class="inline-block bg-sky-500/10 border border-sky-500/20 rounded-lg px-3.5 py-1.5 font-mono text-sm text-sky-400 mb-3">/api/portscan?data={host}&amp;ports={ports}</div>
+            <div class="overflow-x-auto rounded-lg border border-slate-700 mb-4">
+              <table class="w-full text-sm border-collapse">
+                <thead>
+                  <tr>
+                    <th class="text-left px-3 py-2 bg-slate-900 border-b-2 border-slate-700 text-slate-400 uppercase text-[11px] tracking-wider">Parameter</th>
+                    <th class="text-left px-3 py-2 bg-slate-900 border-b-2 border-slate-700 text-slate-400 uppercase text-[11px] tracking-wider">Type</th>
+                    <th class="text-left px-3 py-2 bg-slate-900 border-b-2 border-slate-700 text-slate-400 uppercase text-[11px] tracking-wider">Required</th>
+                    <th class="text-left px-3 py-2 bg-slate-900 border-b-2 border-slate-700 text-slate-400 uppercase text-[11px] tracking-wider">Description</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr class="hover:bg-sky-500/[0.03]">
+                    <td class="px-3 py-2 border-b border-slate-700 font-mono">data</td>
+                    <td class="px-3 py-2 border-b border-slate-700">string</td>
+                    <td class="px-3 py-2 border-b border-slate-700"><span class="tag tag-required">Required</span></td>
+                    <td class="px-3 py-2 border-b border-slate-700 text-slate-400">Hostname or IP address.</td>
+                  </tr>
+                  <tr class="hover:bg-sky-500/[0.03]">
+                    <td class="px-3 py-2 border-b border-slate-700 font-mono">ports</td>
+                    <td class="px-3 py-2 border-b border-slate-700">string</td>
+                    <td class="px-3 py-2 border-b border-slate-700"><span class="tag tag-optional">Optional</span></td>
+                    <td class="px-3 py-2 border-b border-slate-700 text-slate-400">Comma-separated ports. Max 50. Default: common ports.</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <pre>GET /api/portscan?data=example.com&ports=80,443,8080</pre>
+            <pre>{
   <span class="key">"status"</span>: <span class="string">"success"</span>,
   <span class="key">"message"</span>: <span class="string">"Port scan completed"</span>,
   <span class="key">"data"</span>: {
@@ -184,20 +270,42 @@
     ]
   }
 }</pre>
+          </div>
         </div>
 
-        <div class="endpoint" id="endpoint-ssl">
-          <h3><span class="tag tag-get">GET</span> SSL/TLS Certificate Checker</h3>
-          <div class="endpoint-url">/api/ssl?data={domain}&port={port}</div>
-          <table class="param-table">
-            <thead><tr><th>Parameter</th><th>Type</th><th>Required</th><th>Description</th></tr></thead>
-            <tbody>
-              <tr><td><code>data</code></td><td>string</td><td><span class="tag tag-required">Required</span></td><td>Domain name (e.g. google.com)</td></tr>
-              <tr><td><code>port</code></td><td>integer</td><td><span class="tag tag-optional">Optional</span></td><td>Port (default: 443)</td></tr>
-            </tbody>
-          </table>
-          <pre>GET /api/ssl?data=google.com</pre>
-          <pre>{
+        <!-- SSL Checker Endpoint -->
+        <div class="endpoint mb-8 scroll-mt-20" id="endpoint-ssl">
+          <div class="bg-slate-800 border border-slate-700/70 rounded-xl p-5 sm:p-6 shadow-lg shadow-black/20">
+            <h3 class="text-lg font-bold mb-3 flex items-center gap-2"><span class="tag tag-get">GET</span> SSL/TLS Certificate Checker</h3>
+            <div class="inline-block bg-sky-500/10 border border-sky-500/20 rounded-lg px-3.5 py-1.5 font-mono text-sm text-sky-400 mb-3">/api/ssl?data={domain}&amp;port={port}</div>
+            <div class="overflow-x-auto rounded-lg border border-slate-700 mb-4">
+              <table class="w-full text-sm border-collapse">
+                <thead>
+                  <tr>
+                    <th class="text-left px-3 py-2 bg-slate-900 border-b-2 border-slate-700 text-slate-400 uppercase text-[11px] tracking-wider">Parameter</th>
+                    <th class="text-left px-3 py-2 bg-slate-900 border-b-2 border-slate-700 text-slate-400 uppercase text-[11px] tracking-wider">Type</th>
+                    <th class="text-left px-3 py-2 bg-slate-900 border-b-2 border-slate-700 text-slate-400 uppercase text-[11px] tracking-wider">Required</th>
+                    <th class="text-left px-3 py-2 bg-slate-900 border-b-2 border-slate-700 text-slate-400 uppercase text-[11px] tracking-wider">Description</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr class="hover:bg-sky-500/[0.03]">
+                    <td class="px-3 py-2 border-b border-slate-700 font-mono">data</td>
+                    <td class="px-3 py-2 border-b border-slate-700">string</td>
+                    <td class="px-3 py-2 border-b border-slate-700"><span class="tag tag-required">Required</span></td>
+                    <td class="px-3 py-2 border-b border-slate-700 text-slate-400">Domain name (e.g. google.com)</td>
+                  </tr>
+                  <tr class="hover:bg-sky-500/[0.03]">
+                    <td class="px-3 py-2 border-b border-slate-700 font-mono">port</td>
+                    <td class="px-3 py-2 border-b border-slate-700">integer</td>
+                    <td class="px-3 py-2 border-b border-slate-700"><span class="tag tag-optional">Optional</span></td>
+                    <td class="px-3 py-2 border-b border-slate-700 text-slate-400">Port (default: 443)</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <pre>GET /api/ssl?data=google.com</pre>
+            <pre>{
   <span class="key">"status"</span>: <span class="string">"success"</span>,
   <span class="key">"message"</span>: <span class="string">"SSL/TLS certificate information retrieved"</span>,
   <span class="key">"data"</span>: {
@@ -212,58 +320,103 @@
     }
   }
 }</pre>
+          </div>
         </div>
 
-        <div class="endpoint" id="errors">
-          <h3>⚠️ Error Codes</h3>
-          <table class="param-table">
-            <thead><tr><th>HTTP Status</th><th>Description</th></tr></thead>
-            <tbody>
-              <tr><td><code>400</code></td><td>Bad Request — Missing or invalid parameter</td></tr>
-              <tr><td><code>500</code></td><td>Internal Server Error — Upstream service failed</td></tr>
-            </tbody>
-          </table>
-          <p style="color:var(--text-secondary);font-size:14px;margin-top:8px">
-            Error format: <code>{"status": "error", "message": "...", "data": null}</code>
-          </p>
+        <!-- Error Codes -->
+        <div class="endpoint mb-8 scroll-mt-20" id="errors">
+          <div class="bg-slate-800 border border-slate-700/70 rounded-xl p-5 sm:p-6 shadow-lg shadow-black/20">
+            <h3 class="text-lg font-bold mb-4 flex items-center gap-2">⚠️ Error Codes</h3>
+            <div class="overflow-x-auto rounded-lg border border-slate-700">
+              <table class="w-full text-sm border-collapse">
+                <thead>
+                  <tr>
+                    <th class="text-left px-3 py-2 bg-slate-900 border-b-2 border-slate-700 text-slate-400 uppercase text-[11px] tracking-wider">HTTP Status</th>
+                    <th class="text-left px-3 py-2 bg-slate-900 border-b-2 border-slate-700 text-slate-400 uppercase text-[11px] tracking-wider">Description</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr class="hover:bg-sky-500/[0.03]">
+                    <td class="px-3 py-2 border-b border-slate-700"><code class="text-red-400 font-mono">400</code></td>
+                    <td class="px-3 py-2 border-b border-slate-700 text-slate-400">Bad Request — Missing or invalid parameter</td>
+                  </tr>
+                  <tr class="hover:bg-sky-500/[0.03]">
+                    <td class="px-3 py-2 border-b border-slate-700"><code class="text-red-400 font-mono">500</code></td>
+                    <td class="px-3 py-2 border-b border-slate-700 text-slate-400">Internal Server Error — Upstream service failed</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <p class="text-slate-400 text-sm mt-3">Error format: <code class="bg-slate-900 px-1.5 py-0.5 rounded text-xs font-mono">{"status": "error", "message": "...", "data": null}</code></p>
+          </div>
         </div>
 
-        <div class="endpoint" id="rate">
-          <h3>⏱️ Rate Limits &amp; Constraints</h3>
-          <table class="param-table">
-            <thead><tr><th>Limit</th><th>Value</th></tr></thead>
-            <tbody>
-              <tr><td>IP Info API</td><td>~45 req/min (ip-api.com free tier)</td></tr>
-              <tr><td>Port Scanner</td><td>Max 50 ports per scan</td></tr>
-              <tr><td>Function Timeout</td><td>30 seconds (Vercel Hobby)</td></tr>
-              <tr><td>CORS</td><td>All origins allowed</td></tr>
-            </tbody>
-          </table>
+        <!-- Rate Limits -->
+        <div class="endpoint scroll-mt-20" id="rate">
+          <div class="bg-slate-800 border border-slate-700/70 rounded-xl p-5 sm:p-6 shadow-lg shadow-black/20">
+            <h3 class="text-lg font-bold mb-4 flex items-center gap-2">⏱️ Rate Limits &amp; Constraints</h3>
+            <div class="overflow-x-auto rounded-lg border border-slate-700">
+              <table class="w-full text-sm border-collapse">
+                <thead>
+                  <tr>
+                    <th class="text-left px-3 py-2 bg-slate-900 border-b-2 border-slate-700 text-slate-400 uppercase text-[11px] tracking-wider">Limit</th>
+                    <th class="text-left px-3 py-2 bg-slate-900 border-b-2 border-slate-700 text-slate-400 uppercase text-[11px] tracking-wider">Value</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr class="hover:bg-sky-500/[0.03]">
+                    <td class="px-3 py-2 border-b border-slate-700">IP Info API</td>
+                    <td class="px-3 py-2 border-b border-slate-700 text-slate-400">~45 req/min (ip-api.com free tier)</td>
+                  </tr>
+                  <tr class="hover:bg-sky-500/[0.03]">
+                    <td class="px-3 py-2 border-b border-slate-700">Port Scanner</td>
+                    <td class="px-3 py-2 border-b border-slate-700 text-slate-400">Max 50 ports per scan</td>
+                  </tr>
+                  <tr class="hover:bg-sky-500/[0.03]">
+                    <td class="px-3 py-2 border-b border-slate-700">Function Timeout</td>
+                    <td class="px-3 py-2 border-b border-slate-700 text-slate-400">30 seconds (Vercel Hobby)</td>
+                  </tr>
+                  <tr class="hover:bg-sky-500/[0.03]">
+                    <td class="px-3 py-2 border-b border-slate-700">CORS</td>
+                    <td class="px-3 py-2 border-b border-slate-700 text-slate-400">All origins allowed</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
         </div>
 
       </div>
     </div>
+
   </main>
 
-  <footer>
-    <div class="container">
-      <p><strong>NetUtils</strong> — Free network diagnostic tools. <a href="/">Back to App</a></p>
+  <!-- Footer -->
+  <footer class="bg-slate-900 border-t border-slate-700/50 py-6 mt-12 text-center">
+    <div class="max-w-6xl mx-auto px-4">
+      <p class="text-slate-400 text-sm">
+        <strong class="text-slate-200">NetUtils</strong> — Free network diagnostic tools.
+        <a href="/" class="text-sky-400 hover:text-sky-300 hover:underline transition-colors ml-1">Back to App</a>
+      </p>
     </div>
   </footer>
 
+  <!-- TOC Intersection Observer -->
   <script>
     document.addEventListener('DOMContentLoaded', function () {
       const links = document.querySelectorAll('.toc a');
-      new IntersectionObserver(entries => {
-        entries.forEach(entry => {
+      const observer = new IntersectionObserver(function (entries) {
+        entries.forEach(function (entry) {
           if (entry.isIntersecting) {
-            links.forEach(l => l.classList.remove('active'));
-            const link = document.querySelector(`.toc a[href="#${entry.target.id}"]`);
+            links.forEach(function (l) { l.classList.remove('active'); });
+            var link = document.querySelector('.toc a[href="#' + entry.target.id + '"]');
             if (link) link.classList.add('active');
           }
         });
-      }, { threshold: 0.3 }).observe.apply(null, [document.querySelectorAll('.endpoint')].concat());
+      }, { threshold: 0.3 });
+      document.querySelectorAll('.endpoint').forEach(function (el) { observer.observe(el); });
     });
   </script>
+
 </body>
 </html>

@@ -6,213 +6,316 @@
   <title>NetUtils - Network Diagnostic Tools</title>
   <meta name="description" content="Free online network diagnostic tools: IP lookup, DNS checker, HTTP header analyzer, port scanner, and SSL/TLS certificate checker.">
   <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="stylesheet" href="/css/style.css">
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%2338bdf8'/%3E%3Ctext x='50' y='68' font-size='50' text-anchor='middle' fill='white' font-family='sans-serif' font-weight='bold'%3EN%3C/text%3E%3C/svg%3E">
-</head>
-<body>
+  <style>
+    /* --- Required CSS for JS-controlled display toggles --- */
+    .card { display: none; }
+    .card.active { display: block; }
+    .loading { display: none; }
+    .loading.active { display: flex; }
+    .result { display: none; }
+    .result.active { display: block; }
+    .error { display: none; }
+    .error.active { display: block; }
+    .tab.active { --tw-bg-opacity: 1; background-color: rgb(2 132 199 / var(--tw-bg-opacity)); --tw-text-opacity: 1; color: rgb(255 255 255 / var(--tw-text-opacity)); }
+    .toast { visibility: hidden; opacity: 0; transform: translateY(100px); transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+    .toast.show { visibility: visible; opacity: 1; transform: translateY(0); }
 
-  <header>
-    <div class="container">
-      <a href="/" class="logo">
-        <div class="logo-icon">🌐</div>
+    /* --- Dynamically created content classes --- */
+    .data-item { background: #0f172a; border: 1px solid #334155; border-radius: 0.5rem; padding: 0.75rem 0.875rem; }
+    .data-item .label { font-size: 0.6875rem; text-transform: uppercase; letter-spacing: 0.05em; color: #94a3b8; margin-bottom: 0.25rem; }
+    .data-item .value { font-size: 0.875rem; color: #f1f5f9; word-break: break-all; }
+    .mono { font-family: ui-monospace, SFMono-Regular, 'SF Mono', 'Fira Code', monospace; }
+    .dns-section { margin-top: 1rem; }
+    .dns-section h3 { font-size: 0.8125rem; text-transform: uppercase; letter-spacing: 0.05em; color: #38bdf8; margin-bottom: 0.5rem; }
+    .dns-records { display: flex; flex-direction: column; gap: 0.25rem; margin-bottom: 1rem; }
+    .dns-record { background: #0f172a; border: 1px solid #334155; border-radius: 0.375rem; padding: 0.5rem 0.75rem; font-family: ui-monospace, SFMono-Regular, 'SF Mono', 'Fira Code', monospace; font-size: 0.8125rem; word-break: break-all; }
+    .record-type { display: inline-block; padding: 1px 6px; border-radius: 0.25rem; font-size: 0.6875rem; font-weight: 700; margin-right: 0.5rem; }
+    .record-A { background: rgba(56,189,248,0.2); color: #38bdf8; }
+    .record-AAAA { background: rgba(129,140,248,0.2); color: #818cf8; }
+    .record-MX { background: rgba(52,211,153,0.2); color: #34d399; }
+    .record-TXT { background: rgba(251,191,36,0.2); color: #fbbf24; }
+    .record-NS { background: rgba(244,114,182,0.2); color: #f472b6; }
+    .record-CNAME { background: rgba(248,113,113,0.2); color: #f87171; }
+    .record-SOA { background: rgba(167,139,250,0.2); color: #a78bfa; }
+    .record-SRV { background: rgba(52,211,153,0.2); color: #34d399; }
+    .port-item { padding: 0.5rem 0.75rem; border-radius: 0.375rem; border: 1px solid #334155; text-align: center; font-size: 0.8125rem; }
+    .port-item .port-num { font-weight: 700; font-family: ui-monospace, SFMono-Regular, monospace; }
+    .port-item .port-status { font-size: 0.6875rem; text-transform: uppercase; letter-spacing: 0.05em; }
+    .port-item .port-service { font-size: 0.6875rem; color: #94a3b8; }
+    .port-item.open { border-color: #22c55e; background: rgba(34,197,94,0.1); }
+    .port-item.filtered { border-color: #f59e0b; background: rgba(245,158,11,0.1); }
+    .port-item.closed { border-color: #334155; background: #0f172a; opacity: 0.5; }
+    .port-item.open .port-status { color: #22c55e; }
+    .port-item.filtered .port-status { color: #f59e0b; }
+    .port-item.closed .port-status { color: #94a3b8; }
+    .headers-table { width: 100%; border-collapse: collapse; font-size: 0.8125rem; }
+    .headers-table th { text-align: left; padding: 0.5rem 0.75rem; background: #0f172a; border-bottom: 2px solid #334155; color: #94a3b8; text-transform: uppercase; font-size: 0.6875rem; letter-spacing: 0.05em; }
+    .headers-table td { padding: 0.5rem 0.75rem; border-bottom: 1px solid #334155; word-break: break-all; }
+    .headers-table tr:hover td { background: rgba(56,189,248,0.03); }
+    .badge { display: inline-block; padding: 0.25rem 0.625rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 600; }
+    .badge-success { background: rgba(34,197,94,0.15); color: #22c55e; }
+    .badge-error { background: rgba(239,68,68,0.15); color: #ef4444; }
+    .badge-info { background: rgba(56,189,248,0.15); color: #38bdf8; }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: none; }
+
+    /* --- Custom scrollbar --- */
+    ::-webkit-scrollbar { width: 8px; }
+    ::-webkit-scrollbar-track { background: #0f172a; }
+    ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+    /* --- Tailwind-compatible select arrow --- */
+    select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%2394a3b8' viewBox='0 0 16 16'%3E%3Cpath d='M8 11L3 6h10l-5 5z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 0.75rem center; padding-right: 2.25rem; }
+  </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen font-sans antialiased">
+
+  <!-- Header -->
+  <header class="sticky top-0 z-50 bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 border-b border-slate-700/50 backdrop-blur-sm">
+    <div class="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between flex-wrap gap-3">
+      <a href="/" class="flex items-center gap-3 no-underline">
+        <div class="w-10 h-10 bg-gradient-to-br from-sky-400 to-indigo-400 rounded-xl flex items-center justify-center text-xl flex-shrink-0">🌐</div>
         <div>
-          <h1>NetUtils</h1>
-          <span>Network Diagnostic Tools</span>
+          <h1 class="text-xl font-bold bg-gradient-to-r from-sky-400 to-indigo-400 bg-clip-text text-transparent">NetUtils</h1>
+          <span class="text-xs text-slate-400">Network Diagnostic Tools</span>
         </div>
       </a>
-      <div style="display:flex;gap:8px">
-        <a href="/docs" class="btn btn-sm btn-primary" style="text-decoration:none">📖 API Docs</a>
-      </div>
+      <a href="/docs" class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg bg-sky-600/20 text-sky-400 border border-sky-500/30 hover:bg-sky-600/30 hover:text-sky-300 transition-all duration-200 no-underline whitespace-nowrap">📖 API Docs</a>
     </div>
   </header>
 
-  <main class="container">
-    <div class="tabs">
-      <button class="tab active" data-target="card-ip">🌐 IP Info</button>
-      <button class="tab" data-target="card-dns">📡 DNS Lookup</button>
-      <button class="tab" data-target="card-headers">📋 HTTP Headers</button>
-      <button class="tab" data-target="card-portscan">🔌 Port Scan</button>
-      <button class="tab" data-target="card-ssl">🔒 SSL Check</button>
+  <!-- Main Content -->
+  <main class="max-w-6xl mx-auto px-4 py-6">
+
+    <!-- Tab Navigation -->
+    <div class="flex gap-1 flex-wrap bg-slate-800/50 rounded-xl p-1 mb-6 overflow-x-auto -webkit-overflow-scrolling-touch" role="tablist">
+      <button class="tab active px-4 py-2.5 border-none bg-transparent text-slate-400 cursor-pointer text-sm rounded-lg transition-all duration-200 whitespace-nowrap flex items-center gap-1.5 hover:bg-slate-700 hover:text-slate-200" data-target="card-ip">🌐 IP Info</button>
+      <button class="tab px-4 py-2.5 border-none bg-transparent text-slate-400 cursor-pointer text-sm rounded-lg transition-all duration-200 whitespace-nowrap flex items-center gap-1.5 hover:bg-slate-700 hover:text-slate-200" data-target="card-dns">📡 DNS Lookup</button>
+      <button class="tab px-4 py-2.5 border-none bg-transparent text-slate-400 cursor-pointer text-sm rounded-lg transition-all duration-200 whitespace-nowrap flex items-center gap-1.5 hover:bg-slate-700 hover:text-slate-200" data-target="card-headers">📋 HTTP Headers</button>
+      <button class="tab px-4 py-2.5 border-none bg-transparent text-slate-400 cursor-pointer text-sm rounded-lg transition-all duration-200 whitespace-nowrap flex items-center gap-1.5 hover:bg-slate-700 hover:text-slate-200" data-target="card-portscan">🔌 Port Scan</button>
+      <button class="tab px-4 py-2.5 border-none bg-transparent text-slate-400 cursor-pointer text-sm rounded-lg transition-all duration-200 whitespace-nowrap flex items-center gap-1.5 hover:bg-slate-700 hover:text-slate-200" data-target="card-ssl">🔒 SSL Check</button>
     </div>
 
-    <!-- IP Info -->
-    <div class="card active" id="card-ip">
-      <h2>🌐 IP Address Information</h2>
-      <p>Find details about any IP address or domain — location, ISP, organization, and more. Your current IP is fetched automatically.</p>
+    <!-- IP Info Panel -->
+    <div class="card active" id="card-ip" role="tabpanel">
+      <div class="bg-slate-800 border border-slate-700/70 rounded-xl p-5 sm:p-6 shadow-lg shadow-black/20">
+        <h2 class="text-lg font-bold mb-1.5 flex items-center gap-2">🌐 IP Address Information</h2>
+        <p class="text-slate-400 text-sm mb-5">Find details about any IP address or domain — location, ISP, organization, and more. Your current IP is fetched automatically.</p>
 
-      <div class="auto-banner">ℹ️ Your IP information is loaded automatically below. Use the form to look up any IP or domain.</div>
-
-      <div class="form-row">
-        <div class="form-group">
-          <label>IP Address or Domain</label>
-          <input type="text" id="ip-input" placeholder="e.g. 8.8.8.8 or google.com">
+        <div class="flex items-center gap-2 p-3 mb-4 rounded-lg bg-sky-500/5 border border-sky-500/20 text-sky-400 text-xs">
+          <span>ℹ️</span>
+          <span>Your IP information is loaded automatically below. Use the form to look up any IP or domain.</span>
         </div>
-        <div class="form-group" style="flex:0;min-width:auto">
-          <label>&nbsp;</label>
-          <button class="btn btn-primary" id="ip-lookup-btn">Lookup</button>
-        </div>
-      </div>
 
-      <div class="auto-banner" style="margin-top:8px;background:rgba(239,68,68,0.05);border-color:rgba(239,68,68,0.15);color:var(--text-secondary);font-size:12px">
-        ⚖️ <strong>Disclaimer:</strong> This tool displays IP address information for diagnostic and educational purposes only. Use only for your own IP addresses or systems you have permission to investigate.
-      </div>
-
-      <div class="loading" id="ip-loading"><div class="spinner"></div><p>Fetching IP information...</p></div>
-      <div class="error" id="ip-error"></div>
-      <div class="result" id="ip-result">
-        <div class="result-header"><span class="badge badge-success">Data Retrieved</span></div>
-        <div class="data-grid" id="ip-data"></div>
-      </div>
-    </div>
-
-    <!-- DNS Lookup -->
-    <div class="card" id="card-dns">
-      <h2>📡 DNS Lookup</h2>
-      <p>Query DNS records for any domain — A, AAAA, MX, TXT, NS, CNAME, SOA, and SRV records.</p>
-
-      <div class="form-row">
-        <div class="form-group" style="flex:2">
-          <label>Domain</label>
-          <input type="text" id="dns-input" placeholder="e.g. example.com">
+        <div class="flex flex-col sm:flex-row gap-3">
+          <div class="flex-1 min-w-0">
+            <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5">IP Address or Domain</label>
+            <input type="text" id="ip-input" placeholder="e.g. 8.8.8.8 or google.com" class="w-full px-3.5 py-2.5 bg-slate-900 border border-slate-700 rounded-lg text-sm text-slate-100 placeholder-slate-500 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 focus:outline-none transition-all duration-200">
+          </div>
+          <div class="sm:self-end">
+            <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5 sm:invisible">&nbsp;</label>
+            <button class="btn btn-primary px-5 py-2.5 border-none rounded-lg text-sm font-semibold cursor-pointer inline-flex items-center gap-2 whitespace-nowrap bg-gradient-to-r from-sky-600 to-indigo-500 text-white hover:from-sky-500 hover:to-indigo-400 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-sky-500/25 active:translate-y-0 transition-all duration-200" id="ip-lookup-btn">Lookup</button>
+          </div>
         </div>
-        <div class="form-group" style="flex:1">
-          <label>Record Type</label>
-          <select id="dns-type">
-            <option value="ALL">All Records</option>
-            <option value="A">A (IPv4)</option>
-            <option value="AAAA">AAAA (IPv6)</option>
-            <option value="MX">MX (Mail Exchange)</option>
-            <option value="TXT">TXT (Text)</option>
-            <option value="NS">NS (Nameserver)</option>
-            <option value="CNAME">CNAME (Canonical Name)</option>
-            <option value="SOA">SOA (Start of Authority)</option>
-            <option value="SRV">SRV (Service)</option>
-          </select>
-        </div>
-        <div class="form-group" style="flex:0;min-width:auto">
-          <label>&nbsp;</label>
-          <button class="btn btn-primary" id="dns-lookup-btn">Lookup</button>
-        </div>
-      </div>
 
-      <div class="loading" id="dns-loading"><div class="spinner"></div><p>Looking up DNS records...</p></div>
-      <div class="error" id="dns-error"></div>
-      <div class="result" id="dns-result">
-        <div class="result-header">
-          <span class="badge badge-success">DNS Records for <span id="dns-domain"></span></span>
+        <div class="flex items-center gap-2 p-3 mt-4 rounded-lg bg-red-500/5 border border-red-500/15 text-slate-400 text-[11px] leading-relaxed">
+          <span class="text-red-400 text-sm">⚖️</span>
+          <span><strong class="text-slate-300">Disclaimer:</strong> This tool displays IP address information for diagnostic and educational purposes only. Use only for your own IP addresses or systems you have permission to investigate.</span>
         </div>
-        <div id="dns-records"></div>
+
+        <div class="loading flex-col items-center justify-center py-8 text-center" id="ip-loading">
+          <div class="animate-spin h-9 w-9 border-[3px] border-slate-600 border-t-sky-400 rounded-full mb-3"></div>
+          <p class="text-slate-400 text-sm">Fetching IP information...</p>
+        </div>
+        <div class="error p-3.5 mt-4 rounded-lg bg-red-500/10 border border-red-500/30 text-red-400 text-sm" id="ip-error"></div>
+        <div class="result mt-5" id="ip-result">
+          <div class="flex items-center justify-between flex-wrap gap-2 mb-3">
+            <span class="badge badge-success">Data Retrieved</span>
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2" id="ip-data"></div>
+        </div>
       </div>
     </div>
 
-    <!-- HTTP Headers -->
-    <div class="card" id="card-headers">
-      <h2>📋 HTTP Header Checker</h2>
-      <p>Analyze HTTP response headers from any URL. Useful for debugging security headers, caching, and server configuration.</p>
+    <!-- DNS Lookup Panel -->
+    <div class="card" id="card-dns" role="tabpanel">
+      <div class="bg-slate-800 border border-slate-700/70 rounded-xl p-5 sm:p-6 shadow-lg shadow-black/20">
+        <h2 class="text-lg font-bold mb-1.5 flex items-center gap-2">📡 DNS Lookup</h2>
+        <p class="text-slate-400 text-sm mb-5">Query DNS records for any domain — A, AAAA, MX, TXT, NS, CNAME, SOA, and SRV records.</p>
 
-      <div class="form-row">
-        <div class="form-group" style="flex:2">
-          <label>URL</label>
-          <input type="text" id="headers-input" placeholder="e.g. https://example.com">
+        <div class="flex flex-col sm:flex-row gap-3">
+          <div class="flex-[2] min-w-0">
+            <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5">Domain</label>
+            <input type="text" id="dns-input" placeholder="e.g. example.com" class="w-full px-3.5 py-2.5 bg-slate-900 border border-slate-700 rounded-lg text-sm text-slate-100 placeholder-slate-500 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 focus:outline-none transition-all duration-200">
+          </div>
+          <div class="flex-1 min-w-0">
+            <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5">Record Type</label>
+            <select id="dns-type" class="w-full px-3.5 py-2.5 bg-slate-900 border border-slate-700 rounded-lg text-sm text-slate-100 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 focus:outline-none transition-all duration-200 cursor-pointer appearance-none">
+              <option value="ALL">All Records</option>
+              <option value="A">A (IPv4)</option>
+              <option value="AAAA">AAAA (IPv6)</option>
+              <option value="MX">MX (Mail Exchange)</option>
+              <option value="TXT">TXT (Text)</option>
+              <option value="NS">NS (Nameserver)</option>
+              <option value="CNAME">CNAME (Canonical Name)</option>
+              <option value="SOA">SOA (Start of Authority)</option>
+              <option value="SRV">SRV (Service)</option>
+            </select>
+          </div>
+          <div class="sm:self-end">
+            <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5 sm:invisible">&nbsp;</label>
+            <button class="btn btn-primary px-5 py-2.5 border-none rounded-lg text-sm font-semibold cursor-pointer inline-flex items-center gap-2 whitespace-nowrap bg-gradient-to-r from-sky-600 to-indigo-500 text-white hover:from-sky-500 hover:to-indigo-400 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-sky-500/25 active:translate-y-0 transition-all duration-200" id="dns-lookup-btn">Lookup</button>
+          </div>
         </div>
-        <div class="form-group" style="flex:0;min-width:auto">
-          <label>&nbsp;</label>
-          <button class="btn btn-primary" id="headers-lookup-btn">Check</button>
-        </div>
-      </div>
 
-      <div class="loading" id="headers-loading"><div class="spinner"></div><p>Fetching HTTP headers...</p></div>
-      <div class="error" id="headers-error"></div>
-      <div class="result" id="headers-result">
-        <div class="result-header"><span class="badge badge-success">Response Data</span></div>
-        <div class="data-grid" id="headers-general" style="margin-bottom:16px"></div>
-        <h3 style="font-size:13px;text-transform:uppercase;color:var(--text-secondary);margin-bottom:8px;letter-spacing:0.5px">Response Headers</h3>
-        <table class="headers-table"><thead><tr><th style="width:30%">Header</th><th>Value</th></tr></thead><tbody id="headers-table-body"></tbody></table>
+        <div class="loading flex-col items-center justify-center py-8 text-center" id="dns-loading">
+          <div class="animate-spin h-9 w-9 border-[3px] border-slate-600 border-t-sky-400 rounded-full mb-3"></div>
+          <p class="text-slate-400 text-sm">Looking up DNS records...</p>
+        </div>
+        <div class="error p-3.5 mt-4 rounded-lg bg-red-500/10 border border-red-500/30 text-red-400 text-sm" id="dns-error"></div>
+        <div class="result mt-5" id="dns-result">
+          <div class="flex items-center justify-between flex-wrap gap-2 mb-3">
+            <span class="badge badge-success">DNS Records for <span id="dns-domain"></span></span>
+          </div>
+          <div id="dns-records"></div>
+        </div>
       </div>
     </div>
 
-    <!-- Port Scan -->
-    <div class="card" id="card-portscan">
-      <h2>🔌 Port Scanner</h2>
-      <p>Scan common ports on any host to check which services are accessible. Limited to <strong>50 ports max</strong> per scan for security.</p>
+    <!-- HTTP Headers Panel -->
+    <div class="card" id="card-headers" role="tabpanel">
+      <div class="bg-slate-800 border border-slate-700/70 rounded-xl p-5 sm:p-6 shadow-lg shadow-black/20">
+        <h2 class="text-lg font-bold mb-1.5 flex items-center gap-2">📋 HTTP Header Checker</h2>
+        <p class="text-slate-400 text-sm mb-5">Analyze HTTP response headers from any URL. Useful for debugging security headers, caching, and server configuration.</p>
 
-      <div class="form-row">
-        <div class="form-group" style="flex:2">
-          <label>Hostname or IP</label>
-          <input type="text" id="portscan-input" placeholder="e.g. example.com or 8.8.8.8">
+        <div class="flex flex-col sm:flex-row gap-3">
+          <div class="flex-[2] min-w-0">
+            <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5">URL</label>
+            <input type="text" id="headers-input" placeholder="e.g. https://example.com" class="w-full px-3.5 py-2.5 bg-slate-900 border border-slate-700 rounded-lg text-sm text-slate-100 placeholder-slate-500 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 focus:outline-none transition-all duration-200">
+          </div>
+          <div class="sm:self-end">
+            <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5 sm:invisible">&nbsp;</label>
+            <button class="btn btn-primary px-5 py-2.5 border-none rounded-lg text-sm font-semibold cursor-pointer inline-flex items-center gap-2 whitespace-nowrap bg-gradient-to-r from-sky-600 to-indigo-500 text-white hover:from-sky-500 hover:to-indigo-400 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-sky-500/25 active:translate-y-0 transition-all duration-200" id="headers-lookup-btn">Check</button>
+          </div>
         </div>
-        <div class="form-group" style="flex:1">
-          <label>Ports (optional, comma-separated)</label>
-          <input type="text" id="portscan-ports" placeholder="21,22,80,443,8080 (default: common ports)">
-        </div>
-        <div class="form-group" style="flex:0;min-width:auto">
-          <label>&nbsp;</label>
-          <button class="btn btn-primary" id="portscan-btn">Scan</button>
-        </div>
-      </div>
 
-      <div class="auto-banner" style="background:rgba(245,158,11,0.08);border-color:rgba(245,158,11,0.2);color:var(--warning)">
-        ⚠️ Only scan hosts you own or have explicit permission to test. Unauthorized scanning may be illegal.
-      </div>
-
-      <div class="loading" id="portscan-loading"><div class="spinner"></div><p>Scanning ports...</p></div>
-      <div class="error" id="portscan-error"></div>
-      <div class="result" id="portscan-result">
-        <div class="result-header"><span class="badge badge-success">Scan Results</span></div>
-        <div class="data-grid" id="portscan-summary" style="margin-bottom:16px"></div>
-        <h3 style="font-size:13px;text-transform:uppercase;color:var(--text-secondary);margin-bottom:8px;letter-spacing:0.5px">Port Status</h3>
-        <div class="port-results" id="portscan-list"></div>
+        <div class="loading flex-col items-center justify-center py-8 text-center" id="headers-loading">
+          <div class="animate-spin h-9 w-9 border-[3px] border-slate-600 border-t-sky-400 rounded-full mb-3"></div>
+          <p class="text-slate-400 text-sm">Fetching HTTP headers...</p>
+        </div>
+        <div class="error p-3.5 mt-4 rounded-lg bg-red-500/10 border border-red-500/30 text-red-400 text-sm" id="headers-error"></div>
+        <div class="result mt-5" id="headers-result">
+          <div class="flex items-center justify-between flex-wrap gap-2 mb-3">
+            <span class="badge badge-success">Response Data</span>
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 mb-4" id="headers-general"></div>
+          <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Response Headers</h3>
+          <div class="overflow-x-auto rounded-lg border border-slate-700">
+            <table class="headers-table"><thead><tr><th class="w-[30%]">Header</th><th>Value</th></tr></thead><tbody id="headers-table-body"></tbody></table>
+          </div>
+        </div>
       </div>
     </div>
 
-    <!-- SSL Checker -->
-    <div class="card" id="card-ssl">
-      <h2>🔒 SSL/TLS Certificate Checker</h2>
-      <p>Inspect SSL/TLS certificate details for any domain — issuer, validity period, cipher, and more.</p>
+    <!-- Port Scan Panel -->
+    <div class="card" id="card-portscan" role="tabpanel">
+      <div class="bg-slate-800 border border-slate-700/70 rounded-xl p-5 sm:p-6 shadow-lg shadow-black/20">
+        <h2 class="text-lg font-bold mb-1.5 flex items-center gap-2">🔌 Port Scanner</h2>
+        <p class="text-slate-400 text-sm mb-5">Scan common ports on any host to check which services are accessible. Limited to <strong class="text-slate-200">50 ports max</strong> per scan for security.</p>
 
-      <div class="form-row">
-        <div class="form-group" style="flex:2">
-          <label>Domain</label>
-          <input type="text" id="ssl-input" placeholder="e.g. google.com">
+        <div class="flex flex-col sm:flex-row gap-3">
+          <div class="flex-[2] min-w-0">
+            <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5">Hostname or IP</label>
+            <input type="text" id="portscan-input" placeholder="e.g. example.com or 8.8.8.8" class="w-full px-3.5 py-2.5 bg-slate-900 border border-slate-700 rounded-lg text-sm text-slate-100 placeholder-slate-500 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 focus:outline-none transition-all duration-200">
+          </div>
+          <div class="flex-1 min-w-0">
+            <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5">Ports (optional)</label>
+            <input type="text" id="portscan-ports" placeholder="21,22,80,443,8080" class="w-full px-3.5 py-2.5 bg-slate-900 border border-slate-700 rounded-lg text-sm text-slate-100 placeholder-slate-500 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 focus:outline-none transition-all duration-200">
+          </div>
+          <div class="sm:self-end">
+            <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5 sm:invisible">&nbsp;</label>
+            <button class="btn btn-primary px-5 py-2.5 border-none rounded-lg text-sm font-semibold cursor-pointer inline-flex items-center gap-2 whitespace-nowrap bg-gradient-to-r from-sky-600 to-indigo-500 text-white hover:from-sky-500 hover:to-indigo-400 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-sky-500/25 active:translate-y-0 transition-all duration-200" id="portscan-btn">Scan</button>
+          </div>
         </div>
-        <div class="form-group" style="flex:1">
-          <label>Port</label>
-          <select id="ssl-port">
-            <option value="443">443 (HTTPS)</option>
-            <option value="8443">8443</option>
-            <option value="465">465 (SMTPS)</option>
-            <option value="993">993 (IMAPS)</option>
-            <option value="995">995 (POP3S)</option>
-          </select>
+
+        <div class="flex items-center gap-2 p-3 mt-3 rounded-lg bg-amber-500/5 border border-amber-500/20 text-amber-400 text-xs">
+          <span>⚠️</span>
+          <span>Only scan hosts you own or have explicit permission to test. Unauthorized scanning may be illegal.</span>
         </div>
-        <div class="form-group" style="flex:0;min-width:auto">
-          <label>&nbsp;</label>
-          <button class="btn btn-primary" id="ssl-check-btn">Check</button>
+
+        <div class="loading flex-col items-center justify-center py-8 text-center" id="portscan-loading">
+          <div class="animate-spin h-9 w-9 border-[3px] border-slate-600 border-t-sky-400 rounded-full mb-3"></div>
+          <p class="text-slate-400 text-sm">Scanning ports...</p>
+        </div>
+        <div class="error p-3.5 mt-4 rounded-lg bg-red-500/10 border border-red-500/30 text-red-400 text-sm" id="portscan-error"></div>
+        <div class="result mt-5" id="portscan-result">
+          <div class="flex items-center justify-between flex-wrap gap-2 mb-3">
+            <span class="badge badge-success">Scan Results</span>
+          </div>
+          <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 mb-4" id="portscan-summary"></div>
+          <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Port Status</h3>
+          <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-1.5" id="portscan-list"></div>
         </div>
       </div>
+    </div>
 
-      <div class="loading" id="ssl-loading"><div class="spinner"></div><p>Checking SSL certificate...</p></div>
-      <div class="error" id="ssl-error"></div>
-      <div class="result" id="ssl-result">
-        <div class="result-header"><span class="badge badge-success">Certificate Info</span></div>
-        <div class="data-grid" id="ssl-data"></div>
+    <!-- SSL Checker Panel -->
+    <div class="card" id="card-ssl" role="tabpanel">
+      <div class="bg-slate-800 border border-slate-700/70 rounded-xl p-5 sm:p-6 shadow-lg shadow-black/20">
+        <h2 class="text-lg font-bold mb-1.5 flex items-center gap-2">🔒 SSL/TLS Certificate Checker</h2>
+        <p class="text-slate-400 text-sm mb-5">Inspect SSL/TLS certificate details for any domain — issuer, validity period, cipher, and more.</p>
+
+        <div class="flex flex-col sm:flex-row gap-3">
+          <div class="flex-[2] min-w-0">
+            <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5">Domain</label>
+            <input type="text" id="ssl-input" placeholder="e.g. google.com" class="w-full px-3.5 py-2.5 bg-slate-900 border border-slate-700 rounded-lg text-sm text-slate-100 placeholder-slate-500 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 focus:outline-none transition-all duration-200">
+          </div>
+          <div class="flex-1 min-w-0">
+            <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5">Port</label>
+            <select id="ssl-port" class="w-full px-3.5 py-2.5 bg-slate-900 border border-slate-700 rounded-lg text-sm text-slate-100 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 focus:outline-none transition-all duration-200 cursor-pointer appearance-none">
+              <option value="443">443 (HTTPS)</option>
+              <option value="8443">8443</option>
+              <option value="465">465 (SMTPS)</option>
+              <option value="993">993 (IMAPS)</option>
+              <option value="995">995 (POP3S)</option>
+            </select>
+          </div>
+          <div class="sm:self-end">
+            <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5 sm:invisible">&nbsp;</label>
+            <button class="btn btn-primary px-5 py-2.5 border-none rounded-lg text-sm font-semibold cursor-pointer inline-flex items-center gap-2 whitespace-nowrap bg-gradient-to-r from-sky-600 to-indigo-500 text-white hover:from-sky-500 hover:to-indigo-400 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-sky-500/25 active:translate-y-0 transition-all duration-200" id="ssl-check-btn">Check</button>
+          </div>
+        </div>
+
+        <div class="loading flex-col items-center justify-center py-8 text-center" id="ssl-loading">
+          <div class="animate-spin h-9 w-9 border-[3px] border-slate-600 border-t-sky-400 rounded-full mb-3"></div>
+          <p class="text-slate-400 text-sm">Checking SSL certificate...</p>
+        </div>
+        <div class="error p-3.5 mt-4 rounded-lg bg-red-500/10 border border-red-500/30 text-red-400 text-sm" id="ssl-error"></div>
+        <div class="result mt-5" id="ssl-result">
+          <div class="flex items-center justify-between flex-wrap gap-2 mb-3">
+            <span class="badge badge-success">Certificate Info</span>
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2" id="ssl-data"></div>
+        </div>
       </div>
     </div>
 
   </main>
 
-  <footer>
-    <div class="container">
-      <p>
-        <strong>NetUtils</strong> — Free network diagnostic tools.
+  <!-- Footer -->
+  <footer class="bg-slate-900 border-t border-slate-700/50 py-6 mt-12 text-center">
+    <div class="max-w-6xl mx-auto px-4">
+      <p class="text-slate-400 text-sm leading-relaxed">
+        <strong class="text-slate-200">NetUtils</strong> — Free network diagnostic tools.
         <br>
         Built with Node.js serverless functions on Vercel.
         <br>
-        <a href="/docs">API Documentation</a>
+        <a href="/docs" class="text-sky-400 hover:text-sky-300 hover:underline transition-colors">API Documentation</a>
       </p>
 
-      <div class="disclaimer">
-        <strong>⚠️ Legal &amp; Ethical Disclaimer</strong><br>
+      <div class="mt-4 p-3 rounded-lg bg-amber-500/5 border border-amber-500/15 text-amber-400/80 text-[11px] text-left leading-relaxed max-w-2xl mx-auto">
+        <strong class="text-amber-300">⚠️ Legal &amp; Ethical Disclaimer</strong><br>
         <strong>IP Information / Grabber:</strong> This tool displays IP address information for educational and diagnostic purposes only. It is designed to show your own public IP information or to look up IP addresses/domains you own or have permission to investigate. Do not use this tool to track individuals without their explicit consent.<br><br>
         <strong>Port Scanner &amp; Security Tools:</strong> Only use these tools on systems you own or have explicit written permission to test. Unauthorized scanning, probing, or testing of systems may violate applicable laws and regulations.<br><br>
         <strong>Data Privacy:</strong> We do not store, log, or retain any IP addresses, domain lookups, or scan results. All data is processed in real-time and discarded immediately after each request.
@@ -220,8 +323,259 @@
     </div>
   </footer>
 
-  <div class="toast" id="toast"></div>
+  <!-- Toast -->
+  <div class="toast fixed bottom-5 right-5 bg-slate-800 border border-slate-700 rounded-lg px-5 py-3 text-sm z-[100] max-w-sm shadow-xl shadow-black/30" id="toast"></div>
 
-  <script src="/js/main.js"></script>
+  <!-- JavaScript -->
+  <script>
+    const features = {
+      ip: { tab: 'tab-ip', card: 'card-ip', endpoint: '/api/ip' },
+      dns: { tab: 'tab-dns', card: 'card-dns', endpoint: '/api/dns' },
+      headers: { tab: 'tab-headers', card: 'card-headers', endpoint: '/api/headers' },
+      portscan: { tab: 'tab-portscan', card: 'card-portscan', endpoint: '/api/portscan' },
+      ssl: { tab: 'tab-ssl', card: 'card-ssl', endpoint: '/api/ssl' }
+    };
+
+    function $(id) { return document.getElementById(id); }
+
+    function showError(id, message) {
+      const el = $(id);
+      if (el) { el.textContent = message; el.classList.add('active'); }
+    }
+    function hideError(id) { const el = $(id); if (el) el.classList.remove('active'); }
+    function showLoading(id) { const el = $(id); if (el) el.classList.add('active'); }
+    function hideLoading(id) { const el = $(id); if (el) el.classList.remove('active'); }
+    function showResult(id) { const el = $(id); if (el) el.classList.add('active'); }
+    function hideResult(id) { const el = $(id); if (el) el.classList.remove('active'); }
+
+    // Tab switching
+    document.querySelectorAll('.tab').forEach(tab => {
+      tab.addEventListener('click', function () {
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.card').forEach(c => c.classList.remove('active'));
+        this.classList.add('active');
+        $(this.dataset.target).classList.add('active');
+      });
+    });
+
+    // --- IP Info ---
+    async function fetchMyIp() {
+      hideError('ip-error'); hideResult('ip-result'); showLoading('ip-loading');
+      try {
+        const res = await fetch('/api/ip');
+        const data = await res.json();
+        hideLoading('ip-loading');
+        if (data.status === 'success') renderIpData(data.data);
+        else showError('ip-error', data.message);
+      } catch (err) {
+        hideLoading('ip-loading');
+        showError('ip-error', 'Connection error. Please try again.');
+      }
+    }
+
+    $('ip-lookup-btn').addEventListener('click', async function () {
+      const ip = $('ip-input').value.trim();
+      if (!ip) { showError('ip-error', 'Please enter an IP address or domain'); return; }
+      hideError('ip-error'); hideResult('ip-result'); showLoading('ip-loading');
+      try {
+        const res = await fetch('/api/ip?data=' + encodeURIComponent(ip));
+        const data = await res.json();
+        hideLoading('ip-loading');
+        if (data.status === 'success') renderIpData(data.data);
+        else showError('ip-error', data.message);
+      } catch (err) { hideLoading('ip-loading'); showError('ip-error', 'Connection error.'); }
+    });
+
+    function renderIpData(d) {
+      const grid = $('ip-data');
+      grid.innerHTML = '';
+      [
+        { label: 'IP Address', value: d.ip, mono: true },
+        { label: 'Country', value: d.country },
+        { label: 'Region', value: d.region },
+        { label: 'City', value: d.city },
+        { label: 'ISP', value: d.isp },
+        { label: 'Organization', value: d.organization },
+        { label: 'ASN', value: d.asn, mono: true },
+        { label: 'Timezone', value: d.timezone },
+        { label: 'Coordinates', value: d.latitude && d.longitude ? d.latitude + ', ' + d.longitude : 'N/A', mono: true },
+        { label: 'Mobile', value: d.mobile ? 'Yes' : 'No' },
+        { label: 'Proxy/VPN', value: d.proxy ? 'Yes' : 'No' },
+        { label: 'Hosting', value: d.hosting ? 'Yes' : 'No' }
+      ].forEach(function (item) {
+        var div = document.createElement('div');
+        div.className = 'data-item';
+        div.innerHTML = '<div class="label">' + item.label + '</div><div class="value' + (item.mono ? ' mono' : '') + '">' + (item.value || 'N/A') + '</div>';
+        grid.appendChild(div);
+      });
+      showResult('ip-result');
+    }
+
+    // --- DNS Lookup ---
+    $('dns-lookup-btn').addEventListener('click', async function () {
+      const domain = $('dns-input').value.trim();
+      const type = $('dns-type').value;
+      if (!domain) { showError('dns-error', 'Please enter a domain name'); return; }
+      hideError('dns-error'); hideResult('dns-result'); showLoading('dns-loading');
+      try {
+        const res = await fetch('/api/dns?data=' + encodeURIComponent(domain) + '&type=' + type);
+        const data = await res.json();
+        hideLoading('dns-loading');
+        if (data.status === 'success') renderDnsData(data.data);
+        else showError('dns-error', data.message);
+      } catch (err) { hideLoading('dns-loading'); showError('dns-error', 'Connection error.'); }
+    });
+
+    function renderDnsData(d) {
+      const container = $('dns-records');
+      container.innerHTML = '';
+      var typeLabels = { A: 'A (IPv4)', AAAA: 'AAAA (IPv6)', MX: 'MX (Mail Exchange)', TXT: 'TXT (Text)', NS: 'NS (Nameserver)', CNAME: 'CNAME (Canonical Name)', SOA: 'SOA (Start of Authority)', SRV: 'SRV (Service)' };
+      var hasRecords = false;
+
+      for (const [type, records] of Object.entries(d.records)) {
+        if (!records || (Array.isArray(records) && records.length === 0)) continue;
+        hasRecords = true;
+        var html = '<div class="dns-section"><h3>' + (typeLabels[type] || type) + ' Records</h3><div class="dns-records">';
+        if (type === 'MX') {
+          records.sort(function (a, b) { return a.priority - b.priority; });
+          records.forEach(function (r) { html += '<div class="dns-record"><span class="record-type record-' + type + '">' + type + '</span>' + r.exchange + ' (priority: ' + r.priority + ')</div>'; });
+        } else if (type === 'SOA') {
+          html += '<div class="dns-record"><span class="record-type record-' + type + '">SOA</span>nsname: ' + records.nsname + '<br>hostmaster: ' + records.hostmaster + '<br>serial: ' + records.serial + '</div>';
+        } else if (type === 'SRV') {
+          records.forEach(function (r) { html += '<div class="dns-record"><span class="record-type record-' + type + '">SRV</span>' + r.name + ':' + r.port + ' (priority: ' + r.priority + ', weight: ' + r.weight + ')</div>'; });
+        } else if (type === 'TXT') {
+          records.forEach(function (entries) { html += '<div class="dns-record"><span class="record-type record-' + type + '">TXT</span>' + (Array.isArray(entries) ? entries.join(' ') : entries) + '</div>'; });
+        } else {
+          records.forEach(function (r) { html += '<div class="dns-record"><span class="record-type record-' + type + '">' + type + '</span>' + r + '</div>'; });
+        }
+        html += '</div></div>';
+        container.insertAdjacentHTML('beforeend', html);
+      }
+
+      if (!hasRecords) container.innerHTML = '<p class="text-slate-400 text-center py-4">No records found.</p>';
+      $('dns-domain').textContent = d.domain;
+      showResult('dns-result');
+    }
+    $('dns-input').addEventListener('keydown', function (e) { if (e.key === 'Enter') $('dns-lookup-btn').click(); });
+
+    // --- HTTP Headers ---
+    $('headers-lookup-btn').addEventListener('click', async function () {
+      const url = $('headers-input').value.trim();
+      if (!url) { showError('headers-error', 'Please enter a URL'); return; }
+      hideError('headers-error'); hideResult('headers-result'); showLoading('headers-loading');
+      try {
+        const res = await fetch('/api/headers?data=' + encodeURIComponent(url));
+        const data = await res.json();
+        hideLoading('headers-loading');
+        if (data.status === 'success') renderHeadersData(data.data);
+        else showError('headers-error', data.message);
+      } catch (err) { hideLoading('headers-loading'); showError('headers-error', 'Connection error.'); }
+    });
+
+    function renderHeadersData(d) {
+      $('headers-general').innerHTML = '' +
+        '<div class="data-item"><div class="label">URL</div><div class="value mono">' + d.url + '</div></div>' +
+        '<div class="data-item"><div class="label">Final URL</div><div class="value mono">' + d.finalUrl + '</div></div>' +
+        '<div class="data-item"><div class="label">Status Code</div><div class="value mono">' + d.statusCode + ' ' + d.statusMessage + '</div></div>' +
+        '<div class="data-item"><div class="label">HTTP Version</div><div class="value mono">' + d.httpVersion + '</div></div>' +
+        '<div class="data-item"><div class="label">Redirects</div><div class="value mono">' + d.redirectCount + '</div></div>';
+      const table = $('headers-table-body');
+      table.innerHTML = '';
+      for (const [key, value] of Object.entries(d.headers)) {
+        const tr = document.createElement('tr');
+        tr.innerHTML = '<td style="font-weight:600;white-space:nowrap">' + key + '</td><td class="mono">' + (Array.isArray(value) ? value.join(', ') : value) + '</td>';
+        table.appendChild(tr);
+      }
+      showResult('headers-result');
+    }
+    $('headers-input').addEventListener('keydown', function (e) { if (e.key === 'Enter') $('headers-lookup-btn').click(); });
+
+    // --- Port Scan ---
+    $('portscan-btn').addEventListener('click', async function () {
+      const host = $('portscan-input').value.trim();
+      const ports = $('portscan-ports').value.trim();
+      if (!host) { showError('portscan-error', 'Please enter a hostname or IP address'); return; }
+      hideError('portscan-error'); hideResult('portscan-result'); showLoading('portscan-loading');
+      var url = '/api/portscan?data=' + encodeURIComponent(host);
+      if (ports) url += '&ports=' + encodeURIComponent(ports);
+      try {
+        const res = await fetch(url);
+        const data = await res.json();
+        hideLoading('portscan-loading');
+        if (data.status === 'success') renderPortScan(data.data);
+        else showError('portscan-error', data.message);
+      } catch (err) { hideLoading('portscan-loading'); showError('portscan-error', 'Connection error.'); }
+    });
+
+    function renderPortScan(d) {
+      $('portscan-summary').innerHTML = '' +
+        '<div class="data-item"><div class="label">Host</div><div class="value mono">' + d.host + '</div></div>' +
+        '<div class="data-item"><div class="label">Scanned</div><div class="value mono">' + d.totalScanned + ' ports</div></div>' +
+        '<div class="data-item"><div class="label" style="color:#22c55e">Open</div><div class="value mono">' + d.open + '</div></div>' +
+        '<div class="data-item"><div class="label" style="color:#f59e0b">Filtered</div><div class="value mono">' + d.filtered + '</div></div>' +
+        '<div class="data-item"><div class="label" style="color:#94a3b8">Closed</div><div class="value mono">' + d.closed + '</div></div>';
+      const container = $('portscan-list');
+      container.innerHTML = '';
+      d.results.forEach(function (r) {
+        const div = document.createElement('div');
+        div.className = 'port-item ' + r.status;
+        div.innerHTML = '<div class="port-num">' + r.port + '</div><div class="port-status">' + r.status + '</div><div class="port-service">' + r.service + '</div>';
+        container.appendChild(div);
+      });
+      showResult('portscan-result');
+    }
+    $('portscan-input').addEventListener('keydown', function (e) { if (e.key === 'Enter') $('portscan-btn').click(); });
+
+    // --- SSL Checker ---
+    $('ssl-check-btn').addEventListener('click', async function () {
+      const domain = $('ssl-input').value.trim();
+      const port = $('ssl-port').value || '443';
+      if (!domain) { showError('ssl-error', 'Please enter a domain name'); return; }
+      hideError('ssl-error'); hideResult('ssl-result'); showLoading('ssl-loading');
+      try {
+        const res = await fetch('/api/ssl?data=' + encodeURIComponent(domain) + '&port=' + port);
+        const data = await res.json();
+        hideLoading('ssl-loading');
+        if (data.status === 'success') renderSslData(data.data);
+        else showError('ssl-error', data.message);
+      } catch (err) { hideLoading('ssl-loading'); showError('ssl-error', 'Connection error.'); }
+    });
+
+    function renderSslData(d) {
+      const grid = $('ssl-data');
+      grid.innerHTML = '';
+      [
+        { label: 'Domain', value: d.host, mono: true },
+        { label: 'Port', value: d.port, mono: true },
+        { label: 'Protocol', value: d.protocol, mono: true },
+        { label: 'Authorized', value: d.authorized ? 'Yes' : 'No' },
+        { label: 'Cipher', value: d.cipher ? d.cipher.name + ' (' + d.cipher.version + ')' : 'N/A', mono: true },
+        { label: 'Issuer', value: d.certificate && d.certificate.issuer ? (d.certificate.issuer.O || d.certificate.issuer.CN || 'N/A') : 'N/A' },
+        { label: 'Subject', value: d.certificate && d.certificate.subject ? d.certificate.subject.CN || 'N/A' : 'N/A' },
+        { label: 'Valid From', value: d.certificate && d.certificate.validFrom ? d.certificate.validFrom : 'N/A' },
+        { label: 'Valid To', value: d.certificate && d.certificate.validTo ? d.certificate.validTo : 'N/A' },
+        { label: 'Days Remaining', value: d.certificate && d.certificate.daysRemaining !== null && d.certificate.daysRemaining !== undefined ? d.certificate.daysRemaining + ' days' : 'N/A' },
+        { label: 'Expired', value: d.certificate && d.certificate.isExpired ? 'Yes' : 'No' },
+        { label: 'Fingerprint (SHA-256)', value: d.certificate && d.certificate.fingerprint256 ? d.certificate.fingerprint256 : 'N/A', mono: true },
+        { label: 'Serial Number', value: d.certificate && d.certificate.serialNumber ? d.certificate.serialNumber : 'N/A', mono: true }
+      ].forEach(function (item) {
+        var div = document.createElement('div');
+        div.className = 'data-item';
+        div.innerHTML = '<div class="label">' + item.label + '</div><div class="value' + (item.mono ? ' mono' : '') + '">' + item.value + '</div>';
+        grid.appendChild(div);
+      });
+      if (d.certificate && d.certificate.subjectaltname && d.certificate.subjectaltname.length) {
+        const div = document.createElement('div');
+        div.className = 'data-item';
+        div.innerHTML = '<div class="label">Subject Alt Names</div><div class="value mono">' + d.certificate.subjectaltname.join(', ') + '</div>';
+        grid.appendChild(div);
+      }
+      showResult('ssl-result');
+    }
+    $('ssl-input').addEventListener('keydown', function (e) { if (e.key === 'Enter') $('ssl-check-btn').click(); });
+
+    // Auto-detect IP on page load
+    document.addEventListener('DOMContentLoaded', fetchMyIp);
+  </script>
 </body>
 </html>
