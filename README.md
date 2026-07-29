@@ -1,81 +1,148 @@
-<p align="center">
-  <img src="https://img.shields.io/badge/status-live-brightgreen?style=for-the-badge" alt="Status">
-  <img src="https://img.shields.io/badge/node-%3E%3D18-blue?style=for-the-badge&logo=node.js" alt="Node">
-  <img src="https://img.shields.io/badge/vercel-deployed-000?style=for-the-badge&logo=vercel" alt="Vercel">
-  <img src="https://img.shields.io/badge/license-MIT-purple?style=for-the-badge" alt="License">
+<div align="center">
+
+# 🌐 NetUtils
+
+### ⚡ Network Diagnostic Toolkit — Zero Dependencies ⚡
+
+**IP Geolocation · DNS Lookup · HTTP Headers · Port Scanner · SSL/TLS Checker**
+
+<p>
+  <img src="https://img.shields.io/badge/status-live-brightgreen?style=for-the-badge" alt="Status" />
+  <img src="https://img.shields.io/badge/node-%3E%3D18-339933?style=for-the-badge&logo=node.js&logoColor=white" alt="Node" />
+  <img src="https://img.shields.io/badge/deploy-vercel-000000?style=for-the-badge&logo=vercel&logoColor=white" alt="Vercel" />
+  <img src="https://img.shields.io/badge/license-MIT-purple?style=for-the-badge" alt="License" />
 </p>
 
-<div align="center">
-  <h1>🌐 NetUtils</h1>
-  <h3>⚡ Network Diagnostic Toolkit — Zero Dependencies ⚡</h3>
-  <p>
-    <strong>IP Geolocation · DNS Lookup · HTTP Headers · Port Scanner · SSL/TLS Checker</strong>
-  </p>
-  <p>
-    <a href="#-features">Features</a> •
-    <a href="#-api-endpoints">API</a> •
-    <a href="#-deploy">Deploy</a> •
-    <a href="#-project-structure">Structure</a>
-  </p>
+<p>
+  <img src="https://img.shields.io/badge/dependencies-0-brightgreen?style=flat-square" alt="Zero Dependencies" />
+  <img src="https://img.shields.io/github/stars/TheyanzXD/ip-track?style=flat-square&color=yellow" alt="Stars" />
+  <img src="https://img.shields.io/github/last-commit/TheyanzXD/ip-track?style=flat-square" alt="Last Commit" />
+  <img src="https://img.shields.io/github/languages/top/TheyanzXD/ip-track?style=flat-square" alt="Top Language" />
+</p>
+
+**[Features](#-features) · [Getting Started](#-getting-started) · [API Reference](#-api-endpoints) · [Deploy](#-deploy) · [Structure](#-project-structure) · [Contributing](#-contributing)**
+
 </div>
 
----
+<br>
+
+## 📖 Overview
+
+**NetUtils** is a lightweight, serverless network diagnostic toolkit built entirely on **native Node.js modules** — no third-party dependencies required. It bundles five essential networking tools behind a clean web UI and a simple JSON API, and deploys to [Vercel](https://vercel.com) in minutes.
+
+> [!TIP]
+> Every endpoint returns a consistent `{ status, message, data }` JSON shape, so it's easy to script against or plug into your own dashboard.
+
+<br>
 
 ## ✨ Features
 
-| # | Tool | Description | API Endpoint |
-|---|------|-------------|--------------|
+| | Tool | Description | Endpoint |
+|:---:|:---|:---|:---|
 | 🌐 | **IP Info** | Geolocation, ISP, ASN, proxy/VPN detection | `GET /api/ip` |
-| 📡 | **DNS Lookup** | A, AAAA, MX, TXT, NS, CNAME, SOA, SRV | `GET /api/dns` |
+| 📡 | **DNS Lookup** | A, AAAA, MX, TXT, NS, CNAME, SOA, SRV records | `GET /api/dns` |
 | 📋 | **HTTP Headers** | Response header analysis, redirect tracking | `GET /api/headers` |
-| 🔌 | **Port Scanner** | TCP scan (50 ports max, 3s timeout) | `GET /api/portscan` |
+| 🔌 | **Port Scanner** | TCP scan, up to 50 ports, 3s timeout | `GET /api/portscan` |
 | 🔒 | **SSL Checker** | Certificate details, expiry, cipher info | `GET /api/ssl` |
 
-## 🚀 Deploy
+<br>
 
-<table>
-<tr>
-<td width="50%">
+## 🖼️ Screenshots
 
-### Vercel CLI
+<div align="center">
+  <img src="https://via.placeholder.com/800x450.png?text=NetUtils+Dashboard" width="49%" alt="Dashboard screenshot" />
+  <img src="https://via.placeholder.com/800x450.png?text=API+Docs" width="49%" alt="API docs screenshot" />
+</div>
+
+> [!NOTE]
+> Replace the placeholder images above with real screenshots — drop them in a `/screenshots` folder and update the paths.
+
+<br>
+
+## 🛠️ Tech Stack
+
+<div align="center">
+
+| Layer | Technology |
+|:---|:---|
+| Frontend | HTML5 · CSS3 (dark theme) · Vanilla JavaScript |
+| Backend | Node.js (built-in `dns`, `net`, `tls`, `http` modules) |
+| Hosting | Vercel Edge Network + Serverless Functions |
+| Dependencies | **Zero** — no npm packages required |
+
+</div>
+
+<br>
+
+## 🚀 Getting Started
+
+### Prerequisites
+
+- [Node.js](https://nodejs.org/) ≥ 18
+- A free [Vercel](https://vercel.com) account (for deployment)
+
+### Run Locally
+
+```bash
+# Clone the repository
+git clone https://github.com/TheyanzXD/ip-track.git
+cd ip-track
+
+# Install the Vercel CLI
+npm i -g vercel
+
+# Start the local dev server
+vercel dev
+```
+
+The app will be available at `http://localhost:3000`.
+
+<br>
+
+## 📦 Deploy
+
+<details>
+<summary><b>Option A — Vercel CLI</b></summary>
+
+<br>
+
 ```bash
 npm i -g vercel
 vercel login
 vercel
-# Framework: Other
+# Framework Preset: Other
 ```
 
-</td>
-<td width="50%">
+</details>
 
-### GitHub Import
-1. Push to GitHub
-2. [vercel.com/new](https://vercel.com/new)
-3. Import repo
-4. Framework: **Other**
-5. Deploy ✓
+<details>
+<summary><b>Option B — GitHub Import</b></summary>
 
-</td>
-</tr>
-</table>
+<br>
 
-<p align="center">
-  <a href="https://vercel.com/new/clone?repository-url=https://github.com/yourusername/network-utils">
-    <img src="https://vercel.com/button" alt="Deploy to Vercel">
-  </a>
-</p>
+1. Push this repository to your own GitHub account
+2. Go to [vercel.com/new](https://vercel.com/new)
+3. Import the repo
+4. Set Framework Preset to **Other**
+5. Click **Deploy** ✅
+
+</details>
+
+<br>
 
 ## 📡 API Endpoints
 
-All endpoints: `GET /api/{feature}?data={value}` — JSON response `{ status, message, data }`.
+All endpoints follow the pattern `GET /api/{feature}?data={value}` and return JSON in the shape `{ status, message, data }`.
 
 ### `GET /api/ip`
+
 ```
-/api/ip          → your IP info
-/api/ip?data=8.8.8.8  → lookup specific IP
+/api/ip                  → your own IP info
+/api/ip?data=8.8.8.8      → lookup a specific IP
 ```
+
 <details>
-<summary>📦 Response</summary>
+<summary>📦 Example response</summary>
 
 ```json
 {
@@ -96,15 +163,18 @@ All endpoints: `GET /api/{feature}?data={value}` — JSON response `{ status, me
   }
 }
 ```
+
 </details>
 
 ### `GET /api/dns`
+
 ```
 /api/dns?data=example.com          → all records
-/api/dns?data=example.com&type=MX  → MX only
+/api/dns?data=example.com&type=MX  → MX records only
 ```
+
 <details>
-<summary>📦 Response</summary>
+<summary>📦 Example response</summary>
 
 ```json
 {
@@ -119,31 +189,38 @@ All endpoints: `GET /api/{feature}?data={value}` — JSON response `{ status, me
   }
 }
 ```
+
 </details>
 
 ### `GET /api/headers`
+
 ```
 /api/headers?data=https://example.com
 ```
 
 ### `GET /api/portscan`
+
 ```
 /api/portscan?data=example.com
 /api/portscan?data=example.com&ports=80,443,8080
 ```
 
 ### `GET /api/ssl`
+
 ```
 /api/ssl?data=google.com
 /api/ssl?data=google.com&port=443
 ```
 
-> 📖 Full interactive docs at [`/docs`](https://your-domain.vercel.app/docs)
+> [!TIP]
+> Full interactive docs are available at `/docs` once deployed.
+
+<br>
 
 ## 📁 Project Structure
 
 ```
-📦 network-utils
+📦 ip-track
 ├── 📄 index.html          # Main application
 ├── 📄 docs.html           # API documentation
 ├── 🎨 css/style.css       # Dark theme styles
@@ -159,30 +236,72 @@ All endpoints: `GET /api/{feature}?data={value}` — JSON response `{ status, me
 └── 📖 README.md           # This file
 ```
 
+<br>
+
 ## 🏗️ Architecture
 
 ```
 ┌─────────────┐     ┌──────────────────┐     ┌─────────────────┐
-│   Browser   │────▶│  Vercel Edge     │────▶│  Serverless     │
-│  (static)   │     │  (CDN + CORS)    │     │  Functions      │
+│   Browser   │────▶│   Vercel Edge    │────▶│   Serverless    │
+│  (static)   │     │  (CDN + CORS)    │     │   Functions     │
 └─────────────┘     └──────────────────┘     └────────┬────────┘
-                                                      │
-              ┌───────────────────────────────────────┼────────┐
-              │  Built-in Node.js Modules             │        │
-              │  ┌─────┐ ┌────┐ ┌──────┐ ┌───┐ ┌───┐ │        │
-              │  │ dns │ │net │ │ tls  │ │http│ │tls│ │        │
-              │  └─────┘ └────┘ └──────┘ └───┘ └───┘ │        │
-              └───────────────────────────────────────┘────────┘
+                                                        │
+                    ┌───────────────────────────────────┴────────┐
+                    │       Built-in Node.js Modules              │
+                    │   ┌─────┐ ┌─────┐ ┌──────┐ ┌──────┐ ┌─────┐ │
+                    │   │ dns │ │ net │ │ tls  │ │ http │ │ tls │ │
+                    │   └─────┘ └─────┘ └──────┘ └──────┘ └─────┘ │
+                    └──────────────────────────────────────────────┘
 ```
 
-## ⚖️ Legal
+<br>
 
-> **IP Grabber:** Shows your own IP or domains you own. Not for tracking without consent.  
-> **Port Scanner:** Only scan systems you own or have written permission to test.  
-> **Privacy:** Zero data stored. Everything processed in-memory, discarded after response.
+## 🤝 Contributing
 
----
+Contributions are welcome! Here's how to get started:
 
-<p align="center">
-  Made with ❤️ for network diagnostics · <a href="https://github.com/yourusername/network-utils">GitHub</a>
-</p>
+1. **Fork** the repository
+2. **Create** your feature branch (`git checkout -b feature/amazing-feature`)
+3. **Commit** your changes (`git commit -m 'Add amazing feature'`)
+4. **Push** to the branch (`git push origin feature/amazing-feature`)
+5. **Open** a Pull Request
+
+> [!IMPORTANT]
+> Please keep the zero-dependency philosophy in mind — new features should rely on native Node.js modules wherever possible.
+
+<br>
+
+## ⚖️ Legal & Privacy
+
+> [!WARNING]
+> - **IP Grabber:** Shows your own IP or domains you own. Not intended for tracking without consent.
+> - **Port Scanner:** Only scan systems you own or have explicit permission to test.
+> - **Privacy:** Zero data is stored — everything is processed in-memory and discarded after the response.
+
+<br>
+
+## 📄 License
+
+This project is licensed under the **MIT License** — see the [LICENSE](./LICENSE) file for details.
+
+<br>
+
+## 💬 Community
+
+<div align="center">
+
+Have a question, found a bug, or want to request a feature?
+
+[![Issues](https://img.shields.io/badge/Open%20an-Issue-red?style=for-the-badge&logo=github)](https://github.com/TheyanzXD/ip-track/issues)
+[![Pull Requests](https://img.shields.io/badge/Submit%20a-Pull%20Request-blue?style=for-the-badge&logo=github)](https://github.com/TheyanzXD/ip-track/pulls)
+[![Star this repo](https://img.shields.io/badge/⭐-Star%20this%20repo-yellow?style=for-the-badge)](https://github.com/TheyanzXD/ip-track)
+
+</div>
+
+<br>
+
+<div align="center">
+
+Made with ❤️ for network diagnostics · by [**TheyanzXD**](https://github.com/TheyanzXD)
+
+</div>
