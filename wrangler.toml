@@ -1,12 +1,12 @@
 name = "ip-track"
-main = "src/index.js"
+main = "js/main.js"
 compatibility_date = "2026-08-03"
 compatibility_flags = ["nodejs_compat"]
 
 [vars]
 UPSTASH_REDIS_REST_URL = "https://your-redis-url.upstash.io"
 UPSTASH_REDIS_REST_TOKEN = "your-redis-token"
-IPINFO_TOKEN = "your-ipinfo-token"
+IPINFO_TOKEN = "ip-info.io"
 
 [assets]
 directory = "."
