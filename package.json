@@ -6,7 +6,11 @@
   "type": "module",
   "scripts": {
     "test": "node --test test/*.test.js",
-    "check": "node --check scripts/gen-icons.js && node --check scripts/gen-openapi.js"
+    "check": "node --check scripts/gen-icons.js && node --check scripts/gen-openapi.js",
+    "deploy": "wrangler deploy",
+    "deploy:dev": "wrangler deploy --env dev",
+    "tail": "wrangler tail",
+    "dev": "wrangler dev"
   },
   "dependencies": {}
 }

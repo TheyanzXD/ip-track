@@ -1,5 +1,5 @@
-// src/index.js
-// NetUtils - Network Diagnostic Toolkit Entry Point
+// src/index.js — NetUtils - Network Diagnostic Toolkit Entry Point
+// Cloudflare Workers compatible (nodejs_compat flag)
 
 import { createServer } from 'node:http';
 import { parse } from 'node:url';
@@ -11,8 +11,6 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const isDev = process.env.NODE_ENV !== 'production';
 const PORT = process.env.PORT || 3000;
 
-// API route handlers mapping
-// Each handler corresponds to an endpoint in /api/
 const apiHandlers = {
   '/api/ip': () => import('../api/ip.js').then(m => m.default),
   '/api/dns': () => import('../api/dns.js').then(m => m.default),
@@ -26,10 +24,9 @@ const apiHandlers = {
   '/api/ai': () => import('../api/ai.js').then(m => m.default),
 };
 
-// Serve static files from /public
 async function serveStatic(req, res, pathname) {
   try {
-    const filePath = join(__dirname, '../public', pathname === '/' ? 'index.html' : pathname);
+    const filePath = join(__dirname, '..', pathname === '/' ? 'index.html' : pathname);
     const data = await readFile(filePath);
     const ext = pathname.split('.').pop() || 'html';
     const mimeTypes = {
@@ -50,12 +47,12 @@ async function serveStatic(req, res, pathname) {
   }
 }
 
-// Main request handler
 async function handleRequest(req, res) {
   const { pathname, query } = parse(req.url || '/', true);
   const method = req.method || 'GET';
 
-  // CORS headers (mirroring vercel.json)[reference:2]
+  req.query = query;
+
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, DELETE, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
@@ -66,7 +63,6 @@ async function handleRequest(req, res) {
     return;
   }
 
-  // API routes: /api/*
   if (pathname.startsWith('/api/')) {
     const handlerLoader = apiHandlers[pathname];
     if (!handlerLoader) {
@@ -77,8 +73,6 @@ async function handleRequest(req, res) {
 
     try {
       const handler = await handlerLoader();
-      // Each handler receives (req, res) and should produce a JSON response
-      // with shape { status, message, data }[reference:3][reference:4]
       await handler(req, res);
     } catch (err) {
       console.error(`[${pathname}] Error:`, err);
@@ -91,11 +85,9 @@ async function handleRequest(req, res) {
     return;
   }
 
-  // Static files (UI)
   await serveStatic(req, res, pathname);
 }
 
-// Create HTTP server
 const server = createServer(handleRequest);
 
 server.listen(PORT, () => {

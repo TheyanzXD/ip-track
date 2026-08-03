@@ -17,4 +17,4 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
       - run: npm test
-      - run: node --check scripts/gen-icons.js && node --check scripts/gen-openapi.js
+      - run: npm run check
