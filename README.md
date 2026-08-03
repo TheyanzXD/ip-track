@@ -21,7 +21,16 @@
   </p>
 </div>
 
----
+<br>
+
+## 📖 Overview
+
+**NetUtils** is a lightweight, serverless network diagnostic toolkit built entirely on **native Node.js modules** — no third-party dependencies required. It bundles five essential networking tools behind a clean web UI and a simple JSON API, and deploys to [Vercel](https://vercel.com) in minutes.
+
+> [!TIP]
+> Every endpoint returns a consistent `{ status, message, data }` JSON shape, so it's easy to script against or plug into your own dashboard.
+
+<br>
 
 ## ✨ Features
 
@@ -49,39 +58,87 @@ Platform: i18n (EN/ID/ZH), dark mode + system sync, ⌘K command palette, geo ma
 - **AI guardrails**: daily USD budget (hard stop), 24h response cache, prompt-injection hardened.
 - Uniform error contract: `{ status: "error", code, message, data }` — codes: `BAD_REQUEST`, `INVALID_TARGET`, `BLOCKED_TARGET`, `REBINDING_DETECTED`, `UNRESOLVABLE`, `NOT_FOUND`, `RATE_LIMITED`, `UPSTREAM_ERROR`, `SERVICE_UNAVAILABLE`, `BUDGET_EXHAUSTED`.
 
-## 🚀 Deploy
+<br>
 
-<table>
-<tr>
-<td width="50%">
+## 🖼️ Screenshots
 
-### Vercel CLI
+<div align="center">
+  <img src="https://raw.githubusercontent.com/TheyanzXD/assets/refs/heads/main/IMG_20260729_154321.jpg" width="49%"  height="500" alt="Dashboard" />
+  <img src="https://raw.githubusercontent.com/TheyanzXD/assets/refs/heads/main/IMG_20260729_154345.jpg" width="49%"  height="500" alt="Api docs" />
+</div>
+
+<br>
+
+## 🛠️ Tech Stack
+
+<div align="center">
+
+| Layer | Technology |
+|:---|:---|
+| Frontend | HTML5 · CSS3 (dark theme) · Vanilla JavaScript |
+| Backend | Node.js (built-in `dns`, `net`, `tls`, `http` modules) |
+| Hosting | Vercel Edge Network + Serverless Functions |
+| Dependencies | **Zero** — no npm packages required |
+
+</div>
+
+<br>
+
+## 🚀 Getting Started
+
+### Prerequisites
+
+- [Node.js](https://nodejs.org/) ≥ 18
+- A free [Vercel](https://vercel.com) account (for deployment)
+
+### Run Locally
+
+```bash
+# Clone the repository
+git clone https://github.com/TheyanzXD/ip-track.git
+cd ip-track
+
+# Install the Vercel CLI
+npm i -g vercel
+
+# Start the local dev server
+vercel dev
+```
+
+The app will be available at `http://localhost:3000`.
+
+<br>
+
+## 📦 Deploy
+
+<details>
+<summary><b>Option A — Vercel CLI</b></summary>
+
+<br>
+
 ```bash
 npm i -g vercel
 vercel login
 vercel
-# Framework: Other
+# Framework Preset: Other
 ```
 
-</td>
-<td width="50%">
+</details>
 
-### GitHub Import
-1. Push to GitHub
-2. [vercel.com/new](https://vercel.com/new)
-3. Import repo
-4. Framework: **Other**
-5. Deploy ✓
+<details>
+<summary><b>Option B — GitHub Import</b></summary>
 
-</td>
-</tr>
-</table>
+<br>
 
-<p align="center">
-  <a href="https://vercel.com/new/clone?repository-url=https://github.com/yourusername/network-utils">
-    <img src="https://vercel.com/button" alt="Deploy to Vercel">
-  </a>
-</p>
+1. Push this repository to your own GitHub account
+2. Go to [vercel.com/new](https://vercel.com/new)
+3. Import the repo
+4. Set Framework Preset to **Other**
+5. Click **Deploy** ✅
+
+</details>
+
+<br>
 
 ## 🌱 Environment
 
@@ -101,12 +158,14 @@ All optional — zero config runs in-memory.
 All endpoints return JSON `{ status, message, data }` (errors: `{ status: "error", code, message, data }`). Full interactive spec: `/docs` (also `/openapi.json` — OpenAPI 3.1).
 
 ### `GET /api/ip`
+
 ```
-/api/ip          → your IP info
-/api/ip?data=8.8.8.8  → lookup specific IP
+/api/ip                  → your own IP info
+/api/ip?data=8.8.8.8      → lookup a specific IP
 ```
+
 <details>
-<summary>📦 Response</summary>
+<summary>📦 Example response</summary>
 
 ```json
 {
@@ -128,15 +187,18 @@ All endpoints return JSON `{ status, message, data }` (errors: `{ status: "error
   }
 }
 ```
+
 </details>
 
 ### `GET /api/dns`
+
 ```
 /api/dns?data=example.com          → all records
-/api/dns?data=example.com&type=MX  → MX only
+/api/dns?data=example.com&type=MX  → MX records only
 ```
+
 <details>
-<summary>📦 Response</summary>
+<summary>📦 Example response</summary>
 
 ```json
 {
@@ -153,14 +215,17 @@ All endpoints return JSON `{ status, message, data }` (errors: `{ status: "error
   }
 }
 ```
+
 </details>
 
 ### `GET /api/headers`
+
 ```
 /api/headers?data=https://example.com
 ```
 
 ### `GET /api/portscan`
+
 ```
 /api/portscan?data=example.com
 /api/portscan?data=example.com&ports=80,443,8000-8010   # max 50 ports
@@ -168,6 +233,7 @@ All endpoints return JSON `{ status, message, data }` (errors: `{ status: "error
 ```
 
 ### `GET /api/ssl`
+
 ```
 /api/ssl?data=google.com
 /api/ssl?data=google.com&port=443
@@ -264,7 +330,7 @@ Coverage: `netguard` (SSRF classification, punycode, target parsing, port guard)
 └── ⚙️ vercel.json           # Security headers + rewrites
 ```
 
-## ⚖️ Legal
+<br>
 
 > **IP Grabber:** Shows your own IP or domains you own. Not for tracking without consent.
 > **Port Scanner:** Only scan systems you own or have written permission to test.

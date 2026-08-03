@@ -83,6 +83,21 @@
         </div>
       </details>
 
+      <!-- Mobile TOC -->
+      <details class="lg:hidden bg-slate-800 rounded-xl border border-slate-700/70 overflow-hidden">
+        <summary class="px-4 py-3 text-sm font-semibold text-slate-300 cursor-pointer hover:bg-slate-700/50 transition-colors">📖 Jump to Section</summary>
+        <div class="flex flex-col border-t border-slate-700/50">
+          <a href="#endpoint-ip" class="px-4 py-2 text-sm text-slate-400 hover:bg-slate-700/30 hover:text-sky-400 transition-colors no-underline">IP Info</a>
+          <a href="#endpoint-dns" class="px-4 py-2 text-sm text-slate-400 hover:bg-slate-700/30 hover:text-sky-400 transition-colors no-underline">DNS Lookup</a>
+          <a href="#endpoint-headers" class="px-4 py-2 text-sm text-slate-400 hover:bg-slate-700/30 hover:text-sky-400 transition-colors no-underline">HTTP Headers</a>
+          <a href="#endpoint-portscan" class="px-4 py-2 text-sm text-slate-400 hover:bg-slate-700/30 hover:text-sky-400 transition-colors no-underline">Port Scanner</a>
+          <a href="#endpoint-ssl" class="px-4 py-2 text-sm text-slate-400 hover:bg-slate-700/30 hover:text-sky-400 transition-colors no-underline">SSL Checker</a>
+          <a href="#errors" class="px-4 py-2 text-sm text-slate-400 hover:bg-slate-700/30 hover:text-sky-400 transition-colors no-underline">Error Codes</a>
+          <a href="#rate" class="px-4 py-2 text-sm text-slate-400 hover:bg-slate-700/30 hover:text-sky-400 transition-colors no-underline">Rate Limits</a>
+        </div>
+      </details>
+
+      <!-- Content -->
       <div>
         <div class="doc-card base-url-card">
           <span class="label-md base-url-label">Base URL</span>
@@ -255,6 +270,7 @@ Body: { "event":"scan.completed", "scanId":"...", "tool":"dns",
         </div>
       </div>
     </div>
+
   </main>
 
   <footer class="site-footer">
@@ -294,5 +310,6 @@ Body: { "event":"scan.completed", "scanId":"...", "tool":"dns",
     });
     document.querySelectorAll('.tab').forEach(function (t) { t.addEventListener('click', function () { document.querySelectorAll('.tab').forEach(x => x.classList.remove('active')); document.querySelectorAll('.card').forEach(x => x.classList.remove('active')); t.classList.add('active'); document.getElementById(t.dataset.target).classList.add('active'); }); });
   </script>
+
 </body>
 </html>
