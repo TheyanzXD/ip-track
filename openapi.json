@@ -1,0 +1,1429 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "NetUtils API",
+    "version": "2.0.0",
+    "description": "Network diagnostic toolkit: IP intelligence, DNS-over-HTTPS multi-resolver, HTTP headers, concurrent port scanner (SSE), SSL/TLS audit, WHOIS/RDAP, certificate transparency, batch scan jobs, shareable result links, and AI diagnostic reports. All responses: `{ status, message, data }`. Errors: `{ status:\"error\", code, message, data }`.",
+    "license": {
+      "name": "MIT"
+    }
+  },
+  "servers": [
+    {
+      "url": "https://netutils.example.com",
+      "description": "Production"
+    }
+  ],
+  "tags": [
+    {
+      "name": "Lookup",
+      "description": "Single-target lookups"
+    },
+    {
+      "name": "Scan",
+      "description": "Port and batch scanning"
+    },
+    {
+      "name": "Platform",
+      "description": "Share, AI, health, metrics"
+    }
+  ],
+  "paths": {
+    "/api/ip": {
+      "get": {
+        "tags": [
+          "Lookup"
+        ],
+        "summary": "IP address intelligence",
+        "description": "Multi-provider (ip-api.com → ipwho.is → ipinfo.io) with failover, 24h cache, reverse DNS, threat flags. SSRF-guarded. Omitting `data` returns caller IP.",
+        "parameters": [
+          {
+            "name": "data",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "example": "8.8.8.8"
+            },
+            "description": "IPv4, IPv6, or domain"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "IP intelligence",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Envelope"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "$ref": "#/components/schemas/IPInfo"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "403": {
+            "$ref": "#/components/responses/Blocked"
+          },
+          "429": {
+            "$ref": "#/components/responses/RateLimited"
+          },
+          "502": {
+            "$ref": "#/components/responses/Upstream"
+          }
+        }
+      }
+    },
+    "/api/dns": {
+      "get": {
+        "tags": [
+          "Lookup"
+        ],
+        "summary": "DNS lookup across 3 resolvers (DoH)",
+        "parameters": [
+          {
+            "name": "data",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "example.com"
+            }
+          },
+          {
+            "name": "type",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "ALL",
+                "A",
+                "AAAA",
+                "MX",
+                "TXT",
+                "NS",
+                "CNAME",
+                "SOA",
+                "SRV"
+              ],
+              "default": "ALL"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "DNS records + DNSSEC + resolver diff",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DNSResult"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "429": {
+            "$ref": "#/components/responses/RateLimited"
+          }
+        }
+      }
+    },
+    "/api/headers": {
+      "get": {
+        "tags": [
+          "Lookup"
+        ],
+        "summary": "HTTP header checker with security score",
+        "parameters": [
+          {
+            "name": "data",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "https://example.com"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Headers + redirect chain + security score",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HeadersResult"
+                }
+              }
+            }
+          },
+          "403": {
+            "$ref": "#/components/responses/Blocked"
+          },
+          "429": {
+            "$ref": "#/components/responses/RateLimited"
+          },
+          "502": {
+            "$ref": "#/components/responses/Upstream"
+          }
+        }
+      }
+    },
+    "/api/portscan": {
+      "get": {
+        "tags": [
+          "Scan"
+        ],
+        "summary": "Concurrent port scanner",
+        "description": "32 workers, jittered timeouts, banner capture, ranges (80,443,8000-8010), max 50 ports. `stream=1` enables SSE (start/progress/result/done + heartbeats). `scanId` returns a status snapshot.",
+        "parameters": [
+          {
+            "name": "data",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "example.com"
+            }
+          },
+          {
+            "name": "ports",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "example": "80,443,8000-8010"
+            }
+          },
+          {
+            "name": "stream",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "1"
+              ]
+            }
+          },
+          {
+            "name": "scanId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Scan results",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PortScanResult"
+                }
+              }
+            }
+          },
+          "403": {
+            "$ref": "#/components/responses/Blocked"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "429": {
+            "$ref": "#/components/responses/RateLimited"
+          },
+          "200 (SSE)": {
+            "description": "text/event-stream of progress events",
+            "content": {
+              "text/event-stream": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/ssl": {
+      "get": {
+        "tags": [
+          "Lookup"
+        ],
+        "summary": "SSL/TLS audit: chain, OCSP, TLS matrix, ciphers, score",
+        "parameters": [
+          {
+            "name": "data",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "google.com"
+            }
+          },
+          {
+            "name": "port",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "enum": [
+                80,
+                443,
+                465,
+                993,
+                995,
+                8443
+              ],
+              "default": 443
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Full audit",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SSLResult"
+                }
+              }
+            }
+          },
+          "403": {
+            "$ref": "#/components/responses/Blocked"
+          },
+          "429": {
+            "$ref": "#/components/responses/RateLimited"
+          }
+        }
+      }
+    },
+    "/api/whois": {
+      "get": {
+        "tags": [
+          "Lookup"
+        ],
+        "summary": "WHOIS / RDAP registration data",
+        "parameters": [
+          {
+            "name": "data",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "example.com"
+            },
+            "description": "Domain, IP, or AS{number}"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Normalized registration data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WhoisResult"
+                }
+              }
+            }
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "429": {
+            "$ref": "#/components/responses/RateLimited"
+          }
+        }
+      }
+    },
+    "/api/ct": {
+      "get": {
+        "tags": [
+          "Lookup"
+        ],
+        "summary": "Certificate transparency subdomain discovery",
+        "parameters": [
+          {
+            "name": "data",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "example.com"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Subdomains + timeline",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CTResult"
+                }
+              }
+            }
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "429": {
+            "$ref": "#/components/responses/RateLimited"
+          }
+        }
+      }
+    },
+    "/api/scan": {
+      "post": {
+        "tags": [
+          "Scan"
+        ],
+        "summary": "Create batch scan job",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ScanCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Job created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScanJob"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "429": {
+            "$ref": "#/components/responses/RateLimited"
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "Scan"
+        ],
+        "summary": "Job status / SSE stream / abort / webhook log",
+        "parameters": [
+          {
+            "name": "jobId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "stream",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "1"
+              ]
+            }
+          },
+          {
+            "name": "abort",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "webhooks",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "1"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Job snapshot",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScanJob"
+                }
+              }
+            }
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      }
+    },
+    "/api/share": {
+      "post": {
+        "tags": [
+          "Platform"
+        ],
+        "summary": "Create share link",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ShareCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Code + URL",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ShareResult"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "Platform"
+        ],
+        "summary": "Resolve share code",
+        "parameters": [
+          {
+            "name": "code",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[0-9A-HJKMNP-TV-Z]{8}$"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Payload + owner token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Platform"
+        ],
+        "summary": "Delete share (owner token required)",
+        "parameters": [
+          {
+            "name": "code",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "token",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Deleted"
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          }
+        }
+      }
+    },
+    "/api/og": {
+      "get": {
+        "tags": [
+          "Platform"
+        ],
+        "summary": "SVG OpenGraph preview card",
+        "parameters": [
+          {
+            "name": "code",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "image/svg+xml"
+          }
+        }
+      }
+    },
+    "/api/ai": {
+      "get": {
+        "tags": [
+          "Platform"
+        ],
+        "summary": "AI diagnostic report (SSE streaming)",
+        "description": "Requires AI_API_KEY. Cached 24h. Daily budget guard. `stream=1` yields `data: {\"token\": \"...\"}` chunks.",
+        "parameters": [
+          {
+            "name": "tool",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "ip",
+                "dns",
+                "ssl",
+                "portscan",
+                "headers",
+                "whois",
+                "ct"
+              ]
+            }
+          },
+          {
+            "name": "data",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "URL-encoded JSON of the tool result"
+          },
+          {
+            "name": "stream",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "1"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Markdown summary",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AIResult"
+                }
+              }
+            }
+          },
+          "402": {
+            "$ref": "#/components/responses/BudgetExhausted"
+          },
+          "503": {
+            "$ref": "#/components/responses/Unavailable"
+          }
+        }
+      }
+    },
+    "/api/health": {
+      "get": {
+        "tags": [
+          "Platform"
+        ],
+        "summary": "Health check (exempt from rate limits)",
+        "responses": {
+          "200": {
+            "description": "Healthy",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthResult"
+                }
+              }
+            }
+          },
+          "503": {
+            "$ref": "#/components/responses/Unavailable"
+          }
+        }
+      }
+    },
+    "/api/metrics": {
+      "get": {
+        "tags": [
+          "Platform"
+        ],
+        "summary": "Operational metrics (exempt from rate limits)",
+        "responses": {
+          "200": {
+            "description": "Metrics",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Envelope": {
+        "type": "object",
+        "required": [
+          "status",
+          "message"
+        ],
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "success",
+              "error"
+            ]
+          },
+          "message": {
+            "type": "string"
+          }
+        }
+      },
+      "Error": {
+        "type": "object",
+        "required": [
+          "status",
+          "code",
+          "message",
+          "data"
+        ],
+        "properties": {
+          "status": {
+            "type": "string",
+            "const": "error"
+          },
+          "code": {
+            "type": "string",
+            "enum": [
+              "BAD_REQUEST",
+              "INVALID_TARGET",
+              "BLOCKED_TARGET",
+              "REBINDING_DETECTED",
+              "UNRESOLVABLE",
+              "NOT_FOUND",
+              "RATE_LIMITED",
+              "UPSTREAM_ERROR",
+              "SCHEMA_VIOLATION",
+              "INTERNAL_ERROR",
+              "SERVICE_UNAVAILABLE",
+              "AI_UNAVAILABLE",
+              "BUDGET_EXHAUSTED"
+            ]
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "anyOf": [
+              {
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        }
+      },
+      "IPInfo": {
+        "type": "object",
+        "required": [
+          "ip",
+          "meta"
+        ],
+        "properties": {
+          "ip": {
+            "type": "string"
+          },
+          "country": {
+            "type": "string"
+          },
+          "region": {
+            "type": "string"
+          },
+          "city": {
+            "type": "string"
+          },
+          "isp": {
+            "type": "string"
+          },
+          "organization": {
+            "type": "string"
+          },
+          "asn": {
+            "type": "string"
+          },
+          "timezone": {
+            "type": "string"
+          },
+          "latitude": {
+            "type": "number"
+          },
+          "longitude": {
+            "type": "number"
+          },
+          "mobile": {
+            "type": "boolean"
+          },
+          "proxy": {
+            "type": "boolean"
+          },
+          "hosting": {
+            "type": "boolean"
+          },
+          "reverseDns": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "threat": {
+            "type": "object",
+            "properties": {
+              "isTor": {
+                "type": "boolean"
+              },
+              "isVpn": {
+                "type": "boolean"
+              },
+              "isDatacenter": {
+                "type": "boolean"
+              },
+              "isAbuser": {
+                "type": "boolean"
+              },
+              "score": {
+                "anyOf": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            }
+          },
+          "meta": {
+            "type": "object",
+            "required": [
+              "provider",
+              "cached",
+              "elapsedMs"
+            ],
+            "properties": {
+              "provider": {
+                "type": "string"
+              },
+              "cached": {
+                "type": "boolean"
+              },
+              "elapsedMs": {
+                "type": "number"
+              },
+              "accuracyRadius": {
+                "anyOf": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            }
+          }
+        }
+      },
+      "DNSResult": {
+        "type": "object",
+        "required": [
+          "domain"
+        ],
+        "properties": {
+          "domain": {
+            "type": "string"
+          },
+          "records": {
+            "type": "object"
+          },
+          "dnssec": {
+            "type": "object"
+          },
+          "resolverDiff": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          },
+          "flags": {
+            "type": "object"
+          }
+        }
+      },
+      "HeadersResult": {
+        "type": "object",
+        "required": [
+          "url",
+          "statusCode"
+        ],
+        "properties": {
+          "url": {
+            "type": "string"
+          },
+          "finalUrl": {
+            "type": "string"
+          },
+          "statusCode": {
+            "type": "integer"
+          },
+          "headers": {
+            "type": "object"
+          },
+          "redirectChain": {
+            "type": "array"
+          },
+          "redirectCount": {
+            "type": "integer"
+          },
+          "securityScore": {
+            "type": "integer"
+          }
+        }
+      },
+      "PortScanResult": {
+        "type": "object",
+        "required": [
+          "host",
+          "totalScanned"
+        ],
+        "properties": {
+          "host": {
+            "type": "string"
+          },
+          "totalScanned": {
+            "type": "integer"
+          },
+          "open": {
+            "type": "integer"
+          },
+          "filtered": {
+            "type": "integer"
+          },
+          "closed": {
+            "type": "integer"
+          },
+          "scanId": {
+            "type": "string"
+          },
+          "durationMs": {
+            "type": "integer"
+          },
+          "results": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "port",
+                "status"
+              ],
+              "properties": {
+                "port": {
+                  "type": "integer"
+                },
+                "status": {
+                  "type": "string",
+                  "enum": [
+                    "open",
+                    "closed",
+                    "filtered"
+                  ]
+                },
+                "service": {
+                  "type": "string"
+                },
+                "banner": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      },
+      "SSLResult": {
+        "type": "object",
+        "required": [
+          "host",
+          "score"
+        ],
+        "properties": {
+          "host": {
+            "type": "string"
+          },
+          "port": {
+            "type": "integer"
+          },
+          "protocol": {
+            "type": "string"
+          },
+          "authorized": {
+            "type": "boolean"
+          },
+          "certificate": {
+            "type": "object"
+          },
+          "chain": {
+            "type": "array"
+          },
+          "ocsp": {
+            "type": "object"
+          },
+          "tlsVersions": {
+            "type": "object"
+          },
+          "ciphers": {
+            "type": "array"
+          },
+          "score": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 100
+          },
+          "grade": {
+            "type": "string"
+          },
+          "scoreBreakdown": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "WhoisResult": {
+        "type": "object",
+        "required": [
+          "target",
+          "kind",
+          "source"
+        ],
+        "properties": {
+          "target": {
+            "type": "string"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "domain",
+              "ip",
+              "asn"
+            ]
+          },
+          "source": {
+            "type": "string",
+            "enum": [
+              "rdap",
+              "whois-iana"
+            ]
+          },
+          "registrar": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "nameservers": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "status": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "dnssec": {
+            "type": "boolean"
+          }
+        }
+      },
+      "CTResult": {
+        "type": "object",
+        "required": [
+          "domain"
+        ],
+        "properties": {
+          "domain": {
+            "type": "string"
+          },
+          "source": {
+            "type": "string"
+          },
+          "totalCertificates": {
+            "type": "integer"
+          },
+          "subdomains": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "name"
+              ],
+              "properties": {
+                "name": {
+                  "type": "string"
+                },
+                "wildcard": {
+                  "type": "boolean"
+                },
+                "issuers": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "firstSeen": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "timeline": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "month": {
+                  "type": "string"
+                },
+                "count": {
+                  "type": "integer"
+                }
+              }
+            }
+          }
+        }
+      },
+      "ScanCreate": {
+        "type": "object",
+        "required": [
+          "tool",
+          "items"
+        ],
+        "properties": {
+          "tool": {
+            "type": "string",
+            "enum": [
+              "dns",
+              "ip",
+              "ssl"
+            ]
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 200
+          },
+          "webhookUrl": {
+            "type": "string",
+            "format": "uri"
+          },
+          "webhookSecret": {
+            "type": "string",
+            "minLength": 8
+          }
+        }
+      },
+      "ScanJob": {
+        "type": "object",
+        "required": [
+          "jobId"
+        ],
+        "properties": {
+          "jobId": {
+            "type": "string"
+          },
+          "tool": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "created",
+              "queued",
+              "running",
+              "partial",
+              "done",
+              "failed",
+              "aborted",
+              "expired"
+            ]
+          },
+          "total": {
+            "type": "integer"
+          },
+          "done": {
+            "type": "integer"
+          },
+          "ok": {
+            "type": "integer"
+          },
+          "failed": {
+            "type": "integer"
+          },
+          "etaSec": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "results": {
+            "type": "array"
+          }
+        }
+      },
+      "ShareCreate": {
+        "type": "object",
+        "required": [
+          "payload"
+        ],
+        "properties": {
+          "payload": {
+            "type": "object",
+            "required": [
+              "tool",
+              "query",
+              "result"
+            ],
+            "maxProperties": 10
+          }
+        }
+      },
+      "ShareResult": {
+        "type": "object",
+        "required": [
+          "code",
+          "url"
+        ],
+        "properties": {
+          "code": {
+            "type": "string",
+            "pattern": "^[0-9A-HJKMNP-TV-Z]{8}$"
+          },
+          "url": {
+            "type": "string"
+          },
+          "expiresAt": {
+            "type": "string"
+          }
+        }
+      },
+      "AIResult": {
+        "type": "object",
+        "required": [
+          "summary"
+        ],
+        "properties": {
+          "summary": {
+            "type": "string"
+          },
+          "model": {
+            "type": "string"
+          },
+          "cached": {
+            "type": "boolean"
+          },
+          "tool": {
+            "type": "string"
+          }
+        }
+      },
+      "HealthResult": {
+        "type": "object",
+        "required": [
+          "status"
+        ],
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "ok",
+              "degraded"
+            ]
+          },
+          "uptimeSec": {
+            "type": "number"
+          },
+          "memory": {
+            "type": "object"
+          },
+          "checks": {
+            "type": "array"
+          }
+        }
+      }
+    },
+    "responses": {
+      "BadRequest": {
+        "description": "Bad request",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            }
+          }
+        }
+      },
+      "Blocked": {
+        "description": "Target blocked (SSRF)",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            }
+          }
+        }
+      },
+      "NotFound": {
+        "description": "Not found",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            }
+          }
+        }
+      },
+      "RateLimited": {
+        "description": "Rate limited (Retry-After header)",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            }
+          }
+        }
+      },
+      "Upstream": {
+        "description": "Upstream provider failure",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            }
+          }
+        }
+      },
+      "BudgetExhausted": {
+        "description": "AI daily budget exhausted",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            }
+          }
+        }
+      },
+      "Unavailable": {
+        "description": "Service unavailable / degraded",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,52 +1,55 @@
-import whois from 'whois-json';
+// api/whois.js — RDAP-first WHOIS with raw fallback (TODO 01+02)
+import { api, ok, fail, CODES } from '../lib/http.js';
+import { parseTarget } from '../lib/netguard.js';
+import { lookupDomain, lookupIp, lookupAsn } from '../lib/rdap.js';
+import { schemas } from '../lib/schemas.js';
 
-function send(res, statusCode, status, message, data) {
-  res.setHeader('Content-Type', 'application/json');
-  return res.status(statusCode).json({ status, message, data });
-}
+async function handler(req, res, ctx) {
+  const { data } = req.query;
+  if (!data) return fail(res, CODES.BAD_REQUEST, 'Domain or IP parameter (data) is required', { requestId: ctx.requestId });
 
-function isDomainValid(domain) {
-  return /^([a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?\.)+[a-zA-Z]{2,}$/.test(domain);
-}
-
-export default async function handler(req, res) {
-  if (req.method === 'OPTIONS') {
-    res.status(200).end();
-    return;
-  }
-
-  const { data: domain } = req.query;
-
-  if (!domain) {
-    return send(res, 400, 'error', 'Domain parameter (data) is required', null);
-  }
-
-  const cleanDomain = domain.trim().toLowerCase();
-
-  if (!isDomainValid(cleanDomain)) {
-    return send(res, 400, 'error', 'Invalid domain format', null);
+  let parsed;
+  try {
+    parsed = parseTarget(data);
+  } catch (err) {
+    return fail(res, err.code, err.message, { requestId: ctx.requestId });
   }
 
   try {
-    const result = await whois(cleanDomain, { timeout: 15000 });
-
-    if (!result || Object.keys(result).length === 0) {
-      return send(res, 404, 'error', 'No WHOIS data found for this domain', null);
+    let result;
+    if (parsed.type === 'domain') {
+      const info = await lookupDomain(parsed.asciiHost);
+      result = { target: parsed.asciiHost, kind: 'domain', ...info };
+    } else if (parsed.type === 'ipv4' || parsed.type === 'ipv6') {
+      const info = await lookupIp(parsed.value);
+      result = { ...info, target: parsed.value };
+    } else {
+      return fail(res, CODES.INVALID_TARGET, 'Invalid target for WHOIS lookup', { requestId: ctx.requestId });
     }
-
-    const parsed = {};
-    for (const [key, value] of Object.entries(result)) {
-      if (value && value !== '') {
-        parsed[key] = typeof value === 'string' ? value.trim() : value;
-      }
-    }
-
-    return send(res, 200, 'success', 'WHOIS data retrieved', {
-      domain: cleanDomain,
-      whois: parsed,
-      raw: null
-    });
-  } catch (error) {
-    return send(res, 500, 'error', 'WHOIS lookup failed: ' + error.message, null);
+    res.setHeader('Cache-Control', 'public, max-age=3600, s-maxage=86400');
+    return ok(res, result, 'Registration data retrieved', { requestId: ctx.requestId });
+  } catch (err) {
+    if (err.code === 'NOT_FOUND') return fail(res, CODES.NOT_FOUND, err.message, { requestId: ctx.requestId });
+    if (err.code === 'UNRESOLVABLE') return fail(res, CODES.NOT_FOUND, err.message, { requestId: ctx.requestId });
+    return fail(res, err.code || CODES.UPSTREAM_ERROR, err.message || 'WHOIS lookup failed', { requestId: ctx.requestId });
   }
 }
+
+// ASN lookup convenience: /api/whois?data=AS15169
+async function handlerAsn(req, res, ctx) {
+  const { data } = req.query;
+  if (!data || !/^AS\d+$/i.test(String(data))) return handler(req, res, ctx);
+  try {
+    const result = await lookupAsn(data);
+    res.setHeader('Cache-Control', 'public, max-age=3600, s-maxage=86400');
+    return ok(res, result, 'ASN registration data retrieved', { requestId: ctx.requestId });
+  } catch (err) {
+    return fail(res, err.code || CODES.UPSTREAM_ERROR, err.message, { requestId: ctx.requestId });
+  }
+}
+
+export default api(async (req, res, ctx) => {
+  const { data } = req.query;
+  if (data && /^AS\d+$/i.test(String(data))) return handlerAsn(req, res, ctx);
+  return handler(req, res, ctx);
+}, { limit: 20, burst: 4, schema: schemas.whois });

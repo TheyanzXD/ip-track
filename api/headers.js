@@ -1,60 +1,93 @@
+// api/headers.js — HTTP header checker: SSRF-guarded redirect chain, security score (TODO 01)
 import http from 'http';
 import https from 'https';
+import { api, ok, fail, CODES } from '../lib/http.js';
+import { guardUrl, maxRedirects } from '../lib/netguard.js';
+import { schemas } from '../lib/schemas.js';
 
 const MAX_REDIRECTS = 5;
+const REQUEST_TIMEOUT = 10_000;
 
-function send(res, statusCode, status, message, data) {
-  res.setHeader('Content-Type', 'application/json');
-  return res.status(statusCode).json({ status, message, data });
+function securityScore(headers) {
+  let score = 100;
+  const checks = [];
+  const h = Object.fromEntries(Object.entries(headers || {}).map(([k, v]) => [k.toLowerCase(), Array.isArray(v) ? v.join(', ') : String(v)]));
+  const penalties = [
+    ['strict-transport-security', 10, 'HSTS missing'],
+    ['content-security-policy', 15, 'CSP missing'],
+    ['x-content-type-options', 10, 'X-Content-Type-Options missing'],
+    ['referrer-policy', 5, 'Referrer-Policy missing'],
+    ['x-frame-options', 5, 'X-Frame-Options missing'],
+    ['permissions-policy', 5, 'Permissions-Policy missing']
+  ];
+  for (const [name, p, why] of penalties) {
+    if (!h[name]) { score -= p; checks.push({ ok: false, header: name, why }); }
+    else checks.push({ ok: true, header: name });
+  }
+  return { score: Math.max(0, score), checks };
 }
 
-function normalizeUrl(url) {
-  url = url.trim();
-  if (!/^https?:\/\//i.test(url)) url = 'https://' + url;
-  return url;
-}
-
-function fetchHeaders(url, redirectCount = 0) {
+function fetchHeaders(url, redirectCount = 0, chain = []) {
   return new Promise((resolve, reject) => {
-    if (redirectCount > MAX_REDIRECTS) { reject(new Error('Too many redirects')); return; }
-
-    const mod = url.startsWith('https') ? https : http;
-    const parsedUrl = new URL(url);
-
+    maxRedirects(chain, MAX_REDIRECTS);
+    const parsed = new URL(url);
+    const mod = parsed.protocol === 'https:' ? https : http;
+    const started = Date.now();
     const req = mod.request({
-      hostname: parsedUrl.hostname,
-      port: parsedUrl.port || (url.startsWith('https') ? 443 : 80),
-      path: parsedUrl.pathname + parsedUrl.search,
+      hostname: parsed.hostname,
+      port: parsed.port || (parsed.protocol === 'https:' ? 443 : 80),
+      path: parsed.pathname + parsed.search,
       method: 'HEAD',
-      timeout: 10000,
-      headers: { 'User-Agent': 'NetUtils-Bot/1.0' }
+      timeout: REQUEST_TIMEOUT,
+      headers: { 'User-Agent': 'NetUtils-Bot/2.0', Accept: '*/*' }
     }, (response) => {
+      const step = { url, statusCode: response.statusCode, headers: response.headers };
+      chain.push(step);
       if (response.statusCode >= 300 && response.statusCode < 400 && response.headers.location) {
-        return fetchHeaders(normalizeUrl(response.headers.location), redirectCount + 1).then(resolve).catch(reject);
+        response.resume();
+        const next = new URL(response.headers.location, url).toString();
+        return fetchHeaders(next, redirectCount + 1, chain).then(resolve).catch(reject);
       }
+      response.resume();
+      const final = securityScore(response.headers);
       resolve({
-        url, finalUrl: url, statusCode: response.statusCode,
-        statusMessage: response.statusMessage, httpVersion: response.httpVersion,
-        headers: response.headers, redirectCount
+        url: chain[0].url,
+        finalUrl: url,
+        statusCode: response.statusCode,
+        statusMessage: response.statusMessage,
+        httpVersion: response.httpVersion,
+        headers: response.headers,
+        redirectChain: chain.map(c => ({ url: c.url, statusCode: c.statusCode, location: c.headers.location || null })),
+        redirectCount: chain.length - 1,
+        securityScore: final.score,
+        securityChecks: final.checks,
+        durationMs: Date.now() - started
       });
     });
-
     req.on('error', reject);
     req.on('timeout', () => { req.destroy(); reject(new Error('Request timed out')); });
     req.end();
   });
 }
 
-export default async function handler(req, res) {
-  if (req.method === 'OPTIONS') { res.status(200).end(); return; }
-
-  const { data: target } = req.query;
-  if (!target) return send(res, 400, 'error', 'URL parameter (data) is required', null);
-
+async function handler(req, res, ctx) {
+  const { data } = req.query;
+  if (!data) return fail(res, CODES.BAD_REQUEST, 'URL parameter (data) is required', { requestId: ctx.requestId });
+  let target;
   try {
-    const result = await fetchHeaders(normalizeUrl(target));
-    return send(res, 200, 'success', 'HTTP headers retrieved', result);
-  } catch (error) {
-    return send(res, 500, 'error', 'Failed to fetch headers: ' + error.message, null);
+    const guarded = await guardUrl(data.includes('://') ? data : `https://${data}`, { doubleResolve: true });
+    target = `${guarded.protocol}//${guarded.host}${guarded.port !== 443 && guarded.port !== 80 ? ':' + guarded.port : ''}${guarded.path}`;
+  } catch (err) {
+    return fail(res, err.code, err.message, { requestId: ctx.requestId });
+  }
+  try {
+    const result = await fetchHeaders(target, 0, []);
+    res.setHeader('Cache-Control', 'public, max-age=60, s-maxage=600');
+    return ok(res, result, 'HTTP headers retrieved', { requestId: ctx.requestId });
+  } catch (err) {
+    if (err.code) return fail(res, err.code, err.message, { requestId: ctx.requestId });
+    return fail(res, CODES.UPSTREAM_ERROR, `Failed to fetch headers: ${err.message}`, { requestId: ctx.requestId });
   }
 }
+
+export default api(handler, { limit: 30, burst: 5, schema: schemas.headers });

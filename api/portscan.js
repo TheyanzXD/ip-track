@@ -1,68 +1,125 @@
-import net from 'net';
+// api/portscan.js — concurrent scanner + SSE streaming + status polling (TODO 04)
+import { randomUUID } from 'crypto';
+import { api, ok, fail, CODES } from '../lib/http.js';
+import { parseTarget, guardHost, guardIp, ERR } from '../lib/netguard.js';
+import { scan, parsePorts } from '../lib/scanner.js';
+import { createScan, getScan, snapshot, stats } from '../lib/scanstore.js';
 
-const DEFAULT_PORTS = [21, 22, 25, 53, 80, 110, 143, 443, 465, 587, 993, 995, 3306, 3389, 5432, 8080, 8443];
-const MAX_PORTS = 50;
-const CONNECTION_TIMEOUT = 3000;
-const COMMON_SERVICES = {
-  21: 'FTP', 22: 'SSH', 23: 'Telnet', 25: 'SMTP', 53: 'DNS',
-  80: 'HTTP', 110: 'POP3', 143: 'IMAP', 443: 'HTTPS', 465: 'SMTPS',
-  587: 'SMTP Submission', 993: 'IMAPS', 995: 'POP3S',
-  3306: 'MySQL', 3389: 'RDP', 5432: 'PostgreSQL',
-  6379: 'Redis', 8080: 'HTTP-Alt', 8443: 'HTTPS-Alt', 27017: 'MongoDB'
-};
-
-function send(res, statusCode, status, message, data) {
-  res.setHeader('Content-Type', 'application/json');
-  return res.status(statusCode).json({ status, message, data });
+async function resolveTarget(target, { doubleResolve = true } = {}) {
+  const parsed = parseTarget(target);
+  if (parsed.type === 'domain') return { host: parsed.asciiHost, ip: await guardHost(parsed.asciiHost, { doubleResolve }) };
+  guardIp(parsed.value);
+  return { host: parsed.value, ip: parsed.value };
 }
 
-function isValidHost(host) {
-  if (net.isIPv6(host)) return true;
-  const ipv4 = /^(\d{1,3}\.){3}\d{1,3}$/;
-  if (ipv4.test(host)) return host.split('.').map(Number).every(p => p >= 0 && p <= 255);
-  return /^([a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?\.)+[a-zA-Z]{2,}$/.test(host);
-}
+async function handler(req, res, ctx) {
+  const { data, ports: portsParam, scanId, status, token, stream } = req.query;
 
-function scanPort(host, port) {
-  return new Promise((resolve) => {
-    const socket = new net.Socket();
-    socket.setTimeout(CONNECTION_TIMEOUT);
-    socket.on('connect', () => { socket.destroy(); resolve({ port, status: 'open' }); });
-    socket.on('timeout', () => { socket.destroy(); resolve({ port, status: 'filtered' }); });
-    socket.on('error', () => { socket.destroy(); resolve({ port, status: 'closed' }); });
-    socket.connect(port, host);
-  });
-}
-
-export default async function handler(req, res) {
-  if (req.method === 'OPTIONS') { res.status(200).end(); return; }
-
-  const { data: host, ports: portsParam } = req.query;
-  if (!host) return send(res, 400, 'error', 'Host parameter (data) is required', null);
-
-  const cleanHost = host.trim();
-  if (!isValidHost(cleanHost)) return send(res, 400, 'error', 'Invalid hostname or IP address', null);
-
-  let ports = DEFAULT_PORTS;
-  if (portsParam) {
-    const customPorts = portsParam.split(',').map(p => parseInt(p.trim(), 10)).filter(p => !isNaN(p) && p > 0 && p <= 65535);
-    if (customPorts.length === 0) return send(res, 400, 'error', 'Invalid port(s). Use comma-separated numbers (1-65535)', null);
-    ports = customPorts;
+  if (scanId) {
+    const scan = getScan(String(scanId).slice(0, 64));
+    if (!scan) return fail(res, CODES.NOT_FOUND, 'Scan not found or expired', { requestId: ctx.requestId });
+    if (status === '1' || !stream) return ok(res, snapshot(scan), 'Scan status', { requestId: ctx.requestId });
+    return streamScan(res, scan, ctx);
   }
 
-  if (ports.length > MAX_PORTS) return send(res, 400, 'error', `Maximum ${MAX_PORTS} ports allowed`, null);
+  if (!data) return fail(res, CODES.BAD_REQUEST, 'Host parameter (data) is required', { requestId: ctx.requestId });
 
+  let host, ip;
   try {
-    const results = await Promise.all(ports.map(p => scanPort(cleanHost, p)));
-    const enriched = results.map(r => ({ ...r, service: COMMON_SERVICES[r.port] || 'unknown' }));
-    return send(res, 200, 'success', 'Port scan completed', {
-      host: cleanHost, totalScanned: ports.length,
-      open: results.filter(r => r.status === 'open').length,
-      filtered: results.filter(r => r.status === 'filtered').length,
-      closed: results.filter(r => r.status === 'closed').length,
-      results: enriched
+    ({ host, ip } = await resolveTarget(data));
+  } catch (err) {
+    if (err.code === ERR.REBINDING_DETECTED || err.code === ERR.BLOCKED_TARGET) {
+      return fail(res, err.code, err.message, { requestId: ctx.requestId });
+    }
+    return fail(res, err.code || CODES.INVALID_TARGET, err.message, { requestId: ctx.requestId });
+  }
+
+  let ports;
+  try {
+    ports = parsePorts(portsParam);
+  } catch (err) {
+    return fail(res, CODES.BAD_REQUEST, err.message, { requestId: ctx.requestId });
+  }
+
+  const scanIdNew = randomUUID().slice(0, 10);
+  const scanEntry = createScan(scanIdNew, { host, ports, token: randomUUID().slice(0, 16) });
+
+  if (stream === '1') {
+    res.setHeader('Content-Type', 'text/event-stream');
+    res.setHeader('Cache-Control', 'no-cache, no-transform');
+    res.setHeader('Connection', 'keep-alive');
+    res.flushHeaders?.();
+    res.write(`event: start\ndata: ${JSON.stringify({ scanId: scanEntry.scanId, host, total: ports.length })}\n\n`);
+    const controller = new AbortController();
+    const heartbeat = setInterval(() => {
+      if (!res.writableEnded) res.write(`: heartbeat ${Date.now()}\n\n`);
+    }, 15_000);
+
+    scanEntry.startTime = Date.now();
+    scanEntry.status = 'running';
+    const started = Date.now();
+    const results = await scan(host, ports, {
+      concurrency: 32,
+      signal: controller.signal,
+      onResult: (r) => {
+        if (r.status === 'open') scanEntry.open++;
+        else if (r.status === 'filtered') scanEntry.filtered++;
+        else scanEntry.closed++;
+        scanEntry.results.push(r);
+        res.write(`event: result\ndata: ${JSON.stringify(r)}\n\n`);
+        res.write(`event: progress\ndata: ${JSON.stringify({ done: scanEntry.results.length, total: ports.length, elapsedMs: Date.now() - started })}\n\n`);
+      }
     });
-  } catch (error) {
-    return send(res, 500, 'error', 'Port scan failed: ' + error.message, null);
+    scanEntry.status = 'done';
+    scanEntry.endTime = Date.now();
+    clearInterval(heartbeat);
+    res.write(`event: done\ndata: ${JSON.stringify({ scanId: scanEntry.scanId, durationMs: Date.now() - started, summary: { open: scanEntry.open, filtered: scanEntry.filtered, closed: scanEntry.closed } })}\n\n`);
+    res.end();
+    return;
+  }
+
+  // Non-streaming path
+  try {
+    const started = Date.now();
+    scanEntry.startTime = started;
+    scanEntry.status = 'running';
+    const results = await scan(host, ports, { concurrency: 32 });
+    scanEntry.status = 'done';
+    scanEntry.endTime = Date.now();
+    scanEntry.results = results;
+    scanEntry.open = results.filter(r => r.status === 'open').length;
+    scanEntry.filtered = results.filter(r => r.status === 'filtered').length;
+    scanEntry.closed = results.filter(r => r.status === 'closed').length;
+    res.setHeader('Cache-Control', 'no-store');
+    return ok(res, {
+      ...snapshot(scanEntry),
+      scanId: scanEntry.scanId,
+      durationMs: Date.now() - started,
+      results: results.map(r => ({ port: r.port, status: r.status, service: r.service, banner: r.banner }))
+    }, 'Port scan completed', { requestId: ctx.requestId });
+  } catch (err) {
+    scanEntry.status = 'aborted';
+    return fail(res, CODES.INTERNAL_ERROR, 'Port scan failed: ' + err.message, { requestId: ctx.requestId });
   }
 }
+
+function streamScan(res, scan, ctx) {
+  res.setHeader('Content-Type', 'text/event-stream');
+  res.setHeader('Cache-Control', 'no-cache, no-transform');
+  res.flushHeaders?.();
+  res.write(`event: start\ndata: ${JSON.stringify({ scanId: scan.scanId, host: scan.host, total: scan.ports.length, resumed: scan.status })}\n\n`);
+  const timer = setInterval(() => {
+    if (!res.writableEnded) {
+      res.write(`event: progress\ndata: ${JSON.stringify({ done: scan.results.length, total: scan.ports.length })}\n\n`);
+      if (scan.status === 'done' || scan.status === 'aborted') {
+        clearInterval(timer);
+        res.write(`event: done\ndata: ${JSON.stringify(snapshot(scan))}\n\n`);
+        res.end();
+      }
+    }
+  }, 1500);
+  const close = () => clearInterval(timer);
+  res.on('close', close);
+}
+
+export default api(handler, { limit: 10, burst: 2, schema: null });
