@@ -1,5 +1,5 @@
 name = "ip-track"
-main = "js/main.js"
+main = "src/index.js"
 compatibility_date = "2026-08-03"
 compatibility_flags = ["nodejs_compat"]
 
