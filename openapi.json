@@ -10,7 +10,7 @@
   },
   "servers": [
     {
-      "url": "https://netutils.example.com",
+      "url": "https://your-worker.your-subdomain.workers.dev",
       "description": "Production"
     }
   ],

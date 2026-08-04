@@ -32,3 +32,8 @@ google-services.json
 
 # Android Profiling
 *.hprof
+
+# Cloudflare Wrangler
+.wrangler/
+.dev.vars
+wrangler.json

@@ -1,6 +1,6 @@
-Contact: mailto:security@example.com
+Contact: mailto:security@yourdomain.com
 Expires: 2027-01-01T00:00:00Z
-Encryption: https://example.com/.well-known/security.txt
+Encryption: https://yourdomain.com/.well-known/pgp-key.txt
 Preferred-Languages: en, id, zh
-Policy: https://example.com/security-policy
-Canonical: https://example.com/security.txt
+Policy: https://yourdomain.com/security-policy
+Canonical: https://yourdomain.com/security.txt

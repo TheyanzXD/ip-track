@@ -1,99 +1,117 @@
 // src/index.js — NetUtils - Network Diagnostic Toolkit Entry Point
 // Cloudflare Workers compatible (nodejs_compat flag)
 
-import { createServer } from 'node:http';
-import { parse } from 'node:url';
-import { readFile } from 'node:fs/promises';
-import { join, dirname } from 'node:path';
-import { fileURLToPath } from 'node:url';
-
-const __dirname = dirname(fileURLToPath(import.meta.url));
-const isDev = process.env.NODE_ENV !== 'production';
-const PORT = process.env.PORT || 3000;
+import { api, ok, fail, CODES } from './lib/http.js';
 
 const apiHandlers = {
-  '/api/ip': () => import('../api/ip.js').then(m => m.default),
-  '/api/dns': () => import('../api/dns.js').then(m => m.default),
-  '/api/headers': () => import('../api/headers.js').then(m => m.default),
-  '/api/portscan': () => import('../api/portscan.js').then(m => m.default),
-  '/api/ssl': () => import('../api/ssl.js').then(m => m.default),
-  '/api/whois': () => import('../api/whois.js').then(m => m.default),
-  '/api/ct': () => import('../api/ct.js').then(m => m.default),
-  '/api/scan': () => import('../api/scan.js').then(m => m.default),
-  '/api/share': () => import('../api/share.js').then(m => m.default),
-  '/api/ai': () => import('../api/ai.js').then(m => m.default),
+  '/api/ip': () => import('./api/ip.js').then(m => m.default),
+  '/api/dns': () => import('./api/dns.js').then(m => m.default),
+  '/api/headers': () => import('./api/headers.js').then(m => m.default),
+  '/api/portscan': () => import('./api/portscan.js').then(m => m.default),
+  '/api/ssl': () => import('./api/ssl.js').then(m => m.default),
+  '/api/whois': () => import('./api/whois.js').then(m => m.default),
+  '/api/ct': () => import('./api/ct.js').then(m => m.default),
+  '/api/scan': () => import('./api/scan.js').then(m => m.default),
+  '/api/share': () => import('./api/share.js').then(m => m.default),
+  '/api/ai': () => import('./api/ai.js').then(m => m.default),
 };
 
-async function serveStatic(req, res, pathname) {
-  try {
-    const filePath = join(__dirname, '..', pathname === '/' ? 'index.html' : pathname);
-    const data = await readFile(filePath);
-    const ext = pathname.split('.').pop() || 'html';
-    const mimeTypes = {
-      html: 'text/html',
-      css: 'text/css',
-      js: 'application/javascript',
-      json: 'application/json',
-      png: 'image/png',
-      svg: 'image/svg+xml',
-      ico: 'image/x-icon',
-      webmanifest: 'application/manifest+json',
+function createResponseWrapper(originalRequest) {
+  let statusCode = 200;
+  const headers = new Map();
+
+  return {
+    setHeader(name, value) {
+      headers.set(name, value);
+      return value;
+    },
+    get headers() {
+      return originalRequest.headers;
+    },
+    get writableEnded() {
+      return false;
+    },
+    get statusCode() {
+      return statusCode;
+    },
+    set statusCode(v) {
+      statusCode = v;
+    },
+    get headersSent() {
+      return false;
+    },
+    end(body) {
+      const responseHeaders = {};
+      for (const [k, v] of headers.entries()) {
+        responseHeaders[k] = v;
+      }
+      return new Response(body, { status: statusCode, headers: responseHeaders });
+    },
+    writeHead(status, headersArg) {
+      statusCode = status;
+      if (headersArg) {
+        for (const [k, v] of Object.entries(headersArg)) {
+          headers.set(k, v);
+        }
+      }
+      return this;
+    },
+  };
+}
+
+function generateRequestId() {
+  const array = new Uint8Array(16);
+  crypto.getRandomValues(array);
+  return Array.from(array, (b) => b.toString(16).padStart(2, '0')).join('');
+}
+
+export default {
+  async fetch(request, env, ctx) {
+    const url = new URL(request.url);
+    const method = request.method;
+    const path = url.pathname;
+
+    const req = {
+      method,
+      url: request.url,
+      query: Object.fromEntries(url.searchParams.entries()),
+      headers: Object.fromEntries(request.headers.entries()),
+      socket: { remoteAddress: request.headers.get('cf-connecting-ip') || '' },
     };
-    res.writeHead(200, { 'Content-Type': mimeTypes[ext] || 'text/plain' });
-    res.end(data);
-  } catch {
-    res.writeHead(404, { 'Content-Type': 'application/json' });
-    res.end(JSON.stringify({ status: 'error', message: 'Not found' }));
-  }
-}
 
-async function handleRequest(req, res) {
-  const { pathname, query } = parse(req.url || '/', true);
-  const method = req.method || 'GET';
+    const res = createResponseWrapper(req);
 
-  req.query = query;
-
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, DELETE, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-
-  if (method === 'OPTIONS') {
-    res.writeHead(204);
-    res.end();
-    return;
-  }
-
-  if (pathname.startsWith('/api/')) {
-    const handlerLoader = apiHandlers[pathname];
-    if (!handlerLoader) {
-      res.writeHead(404, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ status: 'error', message: `Endpoint ${pathname} not found` }));
-      return;
+    if (method === 'OPTIONS') {
+      return new Response(null, { status: 204 });
     }
 
-    try {
-      const handler = await handlerLoader();
-      await handler(req, res);
-    } catch (err) {
-      console.error(`[${pathname}] Error:`, err);
-      res.writeHead(500, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({
-        status: 'error',
-        message: isDev ? err.message : 'Internal server error',
-      }));
+    if (path.startsWith('/api/')) {
+      const handlerLoader = apiHandlers[path];
+      if (!handlerLoader) {
+        return new Response(JSON.stringify({ status: 'error', message: `Endpoint ${path} not found` }), {
+          status: 404,
+          headers: { 'Content-Type': 'application/json' },
+        });
+      }
+
+      try {
+        const handler = await handlerLoader();
+        return await handler(req, res, { requestId: generateRequestId() });
+      } catch (err) {
+        console.error(`[${path}] Error:`, err);
+        return new Response(
+          JSON.stringify({
+            status: 'error',
+            message: err.message || 'Internal server error',
+          }),
+          {
+            status: 500,
+            headers: { 'Content-Type': 'application/json' },
+          }
+        );
+      }
     }
-    return;
-  }
 
-  await serveStatic(req, res, pathname);
-}
-
-const server = createServer(handleRequest);
-
-server.listen(PORT, () => {
-  console.log(`🚀 NetUtils running at http://localhost:${PORT}`);
-  console.log(`📡 API endpoints available at /api/*`);
-  if (isDev) console.log(`⚡ Development mode enabled`);
-});
-
-export default server;
+    return new Response(null, { status: 404 });
+  },
+};

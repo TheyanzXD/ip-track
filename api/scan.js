@@ -91,14 +91,23 @@ function readJson(req, maxBytes) {
     let size = 0;
     const chunks = [];
     req.on('data', c => {
-      size += c.length;
+      size += c.length || c.byteLength || 0;
       if (size > maxBytes) { reject(new Error('Body too large')); req.destroy(); return; }
       chunks.push(c);
     });
     req.on('end', () => {
       if (chunks.length === 0) return resolve({});
-      try { resolve(JSON.parse(Buffer.concat(chunks).toString('utf8'))); }
-      catch (e) { reject(e); }
+      try {
+        const totalLength = chunks.reduce((sum, c) => sum + (c.length || c.byteLength || 0), 0);
+        const combined = new Uint8Array(totalLength);
+        let offset = 0;
+        for (const c of chunks) {
+          const len = c.length || c.byteLength || 0;
+          combined.set(c instanceof Uint8Array ? c : new Uint8Array(c), offset);
+          offset += len;
+        }
+        resolve(JSON.parse(new TextDecoder().decode(combined)));
+      } catch (e) { reject(e); }
     });
     req.on('error', reject);
   });
