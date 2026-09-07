@@ -26,6 +26,7 @@ const apiHandlers = {
 function createResponseWrapper(originalRequest) {
   let statusCode = 200;
   const headers = new Map();
+  let finalResponse = null;
 
   return {
     setHeader(name, value) {
@@ -36,7 +37,7 @@ function createResponseWrapper(originalRequest) {
       return originalRequest.headers;
     },
     get writableEnded() {
-      return false;
+      return finalResponse !== null;
     },
     get statusCode() {
       return statusCode;
@@ -45,14 +46,15 @@ function createResponseWrapper(originalRequest) {
       statusCode = v;
     },
     get headersSent() {
-      return false;
+      return finalResponse !== null;
     },
     end(body) {
       const responseHeaders = {};
       for (const [k, v] of headers.entries()) {
         responseHeaders[k] = v;
       }
-      return new Response(body, { status: statusCode, headers: responseHeaders });
+      finalResponse = new Response(body, { status: statusCode, headers: responseHeaders });
+      return finalResponse;
     },
     writeHead(status, headersArg) {
       statusCode = status;
@@ -63,6 +65,9 @@ function createResponseWrapper(originalRequest) {
       }
       return this;
     },
+    get finalResponse() {
+      return finalResponse;
+    }
   };
 }
 
@@ -98,7 +103,16 @@ export default {
       try {
         let reqId;
         try { reqId = crypto.randomUUID(); } catch (e) { reqId = 'req-' + Date.now(); }
-        return await handler(req, res, { requestId: reqId });
+        await handler(req, res, { requestId: reqId });
+        
+        if (res.finalResponse) {
+          return res.finalResponse;
+        } else {
+          return new Response(JSON.stringify({ status: 'error', message: 'No response returned from handler' }), {
+            status: 500,
+            headers: { 'Content-Type': 'application/json' },
+          });
+        }
       } catch (err) {
         console.error(`[${path}] Error:`, err);
         return new Response(
