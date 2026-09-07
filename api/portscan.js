@@ -44,46 +44,14 @@ async function handler(req, res, ctx) {
   const scanIdNew = randomUUID().slice(0, 10);
   const scanEntry = createScan(scanIdNew, { host, ports, token: randomUUID().slice(0, 16) });
 
-  if (stream === '1') {
-    res.setHeader('Content-Type', 'text/event-stream');
-    res.setHeader('Cache-Control', 'no-cache, no-transform');
-    res.setHeader('Connection', 'keep-alive');
-    res.flushHeaders?.();
-    res.write(`event: start\ndata: ${JSON.stringify({ scanId: scanEntry.scanId, host, total: ports.length })}\n\n`);
-    const controller = new AbortController();
-    const heartbeat = setInterval(() => {
-      if (!res.writableEnded) res.write(`: heartbeat ${Date.now()}\n\n`);
-    }, 15_000);
-
-    scanEntry.startTime = Date.now();
-    scanEntry.status = 'running';
-    const started = Date.now();
-    const results = await scan(host, ports, {
-      concurrency: 32,
-      signal: controller.signal,
-      onResult: (r) => {
-        if (r.status === 'open') scanEntry.open++;
-        else if (r.status === 'filtered') scanEntry.filtered++;
-        else scanEntry.closed++;
-        scanEntry.results.push(r);
-        res.write(`event: result\ndata: ${JSON.stringify(r)}\n\n`);
-        res.write(`event: progress\ndata: ${JSON.stringify({ done: scanEntry.results.length, total: ports.length, elapsedMs: Date.now() - started })}\n\n`);
-      }
-    });
-    scanEntry.status = 'done';
-    scanEntry.endTime = Date.now();
-    clearInterval(heartbeat);
-    res.write(`event: done\ndata: ${JSON.stringify({ scanId: scanEntry.scanId, durationMs: Date.now() - started, summary: { open: scanEntry.open, filtered: scanEntry.filtered, closed: scanEntry.closed } })}\n\n`);
-    res.end();
-    return;
-  }
+  
 
   // Non-streaming path
   try {
     const started = Date.now();
     scanEntry.startTime = started;
     scanEntry.status = 'running';
-    const results = await scan(host, ports, { concurrency: 32 });
+    const results = await scan(host, ports, { concurrency: 10 });
     scanEntry.status = 'done';
     scanEntry.endTime = Date.now();
     scanEntry.results = results;
@@ -103,11 +71,7 @@ async function handler(req, res, ctx) {
   }
 }
 
-function streamScan(res, scan, ctx) {
-  res.setHeader('Content-Type', 'text/event-stream');
-  res.setHeader('Cache-Control', 'no-cache, no-transform');
-  res.flushHeaders?.();
-  res.write(`event: start\ndata: ${JSON.stringify({ scanId: scan.scanId, host: scan.host, total: scan.ports.length, resumed: scan.status })}\n\n`);
+)}\n\n`);
   const timer = setInterval(() => {
     if (!res.writableEnded) {
       res.write(`event: progress\ndata: ${JSON.stringify({ done: scan.results.length, total: scan.ports.length })}\n\n`);
