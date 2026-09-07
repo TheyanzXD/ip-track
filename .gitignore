@@ -37,3 +37,4 @@ google-services.json
 .wrangler/
 .dev.vars
 wrangler.json
+node_modules/
