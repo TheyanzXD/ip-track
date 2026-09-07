@@ -1,19 +1,19 @@
 // src/index.js — NetUtils - Network Diagnostic Toolkit Entry Point
 // Cloudflare Workers compatible (nodejs_compat flag)
 
-import { api, ok, fail, CODES } from './lib/http.js';
+import { api, ok, fail, CODES } from '../lib/http.js';
 
 const apiHandlers = {
-  '/api/ip': () => import('./api/ip.js').then(m => m.default),
-  '/api/dns': () => import('./api/dns.js').then(m => m.default),
-  '/api/headers': () => import('./api/headers.js').then(m => m.default),
-  '/api/portscan': () => import('./api/portscan.js').then(m => m.default),
-  '/api/ssl': () => import('./api/ssl.js').then(m => m.default),
-  '/api/whois': () => import('./api/whois.js').then(m => m.default),
-  '/api/ct': () => import('./api/ct.js').then(m => m.default),
-  '/api/scan': () => import('./api/scan.js').then(m => m.default),
-  '/api/share': () => import('./api/share.js').then(m => m.default),
-  '/api/ai': () => import('./api/ai.js').then(m => m.default),
+  '/api/ip': () => import('../api/ip.js').then(m => m.default),
+  '/api/dns': () => import('../api/dns.js').then(m => m.default),
+  '/api/headers': () => import('../api/headers.js').then(m => m.default),
+  '/api/portscan': () => import('../api/portscan.js').then(m => m.default),
+  '/api/ssl': () => import('../api/ssl.js').then(m => m.default),
+  '/api/whois': () => import('../api/whois.js').then(m => m.default),
+  '/api/ct': () => import('../api/ct.js').then(m => m.default),
+  '/api/scan': () => import('../api/scan.js').then(m => m.default),
+  '/api/share': () => import('../api/share.js').then(m => m.default),
+  '/api/ai': () => import('../api/ai.js').then(m => m.default),
 };
 
 function createResponseWrapper(originalRequest) {
