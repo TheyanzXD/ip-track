@@ -1,19 +1,26 @@
-// src/index.js — NetUtils - Network Diagnostic Toolkit Entry Point
-// Cloudflare Workers compatible (nodejs_compat flag)
-
 import { api, ok, fail, CODES } from '../lib/http.js';
+import ipHandler from '../api/ip.js';
+import dnsHandler from '../api/dns.js';
+import headersHandler from '../api/headers.js';
+import portscanHandler from '../api/portscan.js';
+import sslHandler from '../api/ssl.js';
+import whoisHandler from '../api/whois.js';
+import ctHandler from '../api/ct.js';
+import scanHandler from '../api/scan.js';
+import shareHandler from '../api/share.js';
+import aiHandler from '../api/ai.js';
 
 const apiHandlers = {
-  '/api/ip': () => import('../api/ip.js').then(m => m.default),
-  '/api/dns': () => import('../api/dns.js').then(m => m.default),
-  '/api/headers': () => import('../api/headers.js').then(m => m.default),
-  '/api/portscan': () => import('../api/portscan.js').then(m => m.default),
-  '/api/ssl': () => import('../api/ssl.js').then(m => m.default),
-  '/api/whois': () => import('../api/whois.js').then(m => m.default),
-  '/api/ct': () => import('../api/ct.js').then(m => m.default),
-  '/api/scan': () => import('../api/scan.js').then(m => m.default),
-  '/api/share': () => import('../api/share.js').then(m => m.default),
-  '/api/ai': () => import('../api/ai.js').then(m => m.default),
+  '/api/ip': ipHandler,
+  '/api/dns': dnsHandler,
+  '/api/headers': headersHandler,
+  '/api/portscan': portscanHandler,
+  '/api/ssl': sslHandler,
+  '/api/whois': whoisHandler,
+  '/api/ct': ctHandler,
+  '/api/scan': scanHandler,
+  '/api/share': shareHandler,
+  '/api/ai': aiHandler,
 };
 
 function createResponseWrapper(originalRequest) {
@@ -59,12 +66,6 @@ function createResponseWrapper(originalRequest) {
   };
 }
 
-function generateRequestId() {
-  const array = new Uint8Array(16);
-  crypto.getRandomValues(array);
-  return Array.from(array, (b) => b.toString(16).padStart(2, '0')).join('');
-}
-
 export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
@@ -86,8 +87,8 @@ export default {
     }
 
     if (path.startsWith('/api/')) {
-      const handlerLoader = apiHandlers[path];
-      if (!handlerLoader) {
+      const handler = apiHandlers[path];
+      if (!handler) {
         return new Response(JSON.stringify({ status: 'error', message: `Endpoint ${path} not found` }), {
           status: 404,
           headers: { 'Content-Type': 'application/json' },
@@ -95,8 +96,9 @@ export default {
       }
 
       try {
-        const handler = await handlerLoader();
-        return await handler(req, res, { requestId: generateRequestId() });
+        let reqId;
+        try { reqId = crypto.randomUUID(); } catch (e) { reqId = 'req-' + Date.now(); }
+        return await handler(req, res, { requestId: reqId });
       } catch (err) {
         console.error(`[${path}] Error:`, err);
         return new Response(
