@@ -1,5 +1,5 @@
 // api/share.js — shareable result links (short codes) + OG preview (TODO 11)
-import crypto from 'crypto';
+import crypto from 'node:crypto';
 import { api, ok, fail, CODES, json } from '../lib/http.js';
 import { kvGet, kvSet, kvDel } from '../lib/kv.js';
 
