@@ -24,7 +24,7 @@ async function handler(req, res, ctx) {
 
   if (req.method === 'POST') {
     let body;
-    try { body = await readJson(req, MAX_PAYLOAD); } catch (err) {
+    try { body = await req.json(); } catch (err) {
       return fail(res, CODES.BAD_REQUEST, `Invalid body: ${err.message}`, { requestId: ctx.requestId });
     }
     const payload = body?.payload;
@@ -79,31 +79,6 @@ function escapeXml(s) {
   return String(s).replace(/[<>&'"]/g, c => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;', "'": '&apos;', '"': '&quot;' }[c]));
 }
 
-function readJson(req, maxBytes) {
-  return new Promise((resolve, reject) => {
-    let size = 0;
-    const chunks = [];
-    req.on('data', c => {
-      size += c.length || c.byteLength || 0;
-      if (size > maxBytes) { reject(new Error('Body too large')); req.destroy(); return; }
-      chunks.push(c);
-    });
-    req.on('end', () => {
-      if (chunks.length === 0) return resolve({});
-      try {
-        const totalLength = chunks.reduce((sum, c) => sum + (c.length || c.byteLength || 0), 0);
-        const combined = new Uint8Array(totalLength);
-        let offset = 0;
-        for (const c of chunks) {
-          const len = c.length || c.byteLength || 0;
-          combined.set(c instanceof Uint8Array ? c : new Uint8Array(c), offset);
-          offset += len;
-        }
-        resolve(JSON.parse(new TextDecoder().decode(combined)));
-      } catch (e) { reject(e); }
-    });
-    req.on('error', reject);
-  });
-}
+
 
 export default api(handler, { limit: 30, burst: 10, exempt: true, schema: null });

@@ -29,7 +29,7 @@ async function handler(req, res, ctx) {
 
   let body;
   try {
-    body = await readJson(req, 128 * 1024);
+    body = await req.json();
   } catch (err) {
     return fail(res, CODES.BAD_REQUEST, `Invalid JSON body: ${err.message}`, { requestId: ctx.requestId });
   }
