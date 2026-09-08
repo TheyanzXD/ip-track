@@ -35,7 +35,7 @@
           "Lookup"
         ],
         "summary": "IP address intelligence",
-        "description": "Multi-provider (ip-api.com → ipwho.is → ipinfo.io) with failover, 24h cache, reverse DNS, threat flags. SSRF-guarded. Omitting `data` returns caller IP.",
+        "description": "Multi-provider (ip-api.com \u2192 ipwho.is \u2192 ipinfo.io) with failover, 24h cache, reverse DNS, threat flags. SSRF-guarded. Omitting `data` returns caller IP.",
         "parameters": [
           {
             "name": "data",
@@ -604,72 +604,6 @@
         "responses": {
           "200": {
             "description": "image/svg+xml"
-          }
-        }
-      }
-    },
-    "/api/ai": {
-      "get": {
-        "tags": [
-          "Platform"
-        ],
-        "summary": "AI diagnostic report (SSE streaming)",
-        "description": "Requires AI_API_KEY. Cached 24h. Daily budget guard. `stream=1` yields `data: {\"token\": \"...\"}` chunks.",
-        "parameters": [
-          {
-            "name": "tool",
-            "in": "query",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "enum": [
-                "ip",
-                "dns",
-                "ssl",
-                "portscan",
-                "headers",
-                "whois",
-                "ct"
-              ]
-            }
-          },
-          {
-            "name": "data",
-            "in": "query",
-            "required": true,
-            "schema": {
-              "type": "string"
-            },
-            "description": "URL-encoded JSON of the tool result"
-          },
-          {
-            "name": "stream",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "string",
-              "enum": [
-                "1"
-              ]
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Markdown summary",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/AIResult"
-                }
-              }
-            }
-          },
-          "402": {
-            "$ref": "#/components/responses/BudgetExhausted"
-          },
-          "503": {
-            "$ref": "#/components/responses/Unavailable"
           }
         }
       }

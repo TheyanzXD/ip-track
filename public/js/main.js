@@ -60,8 +60,8 @@
     });
   }
 
-  // ---------- result action bar (share + AI) ----------
-  function actionBar(container, { tool, query, result, aiPayload }) {
+  // ---------- result action bar (share) ----------
+  function actionBar(container, { tool, query, result }) {
     const bar = document.createElement('div');
     bar.className = 'result-actions';
     const shareBtn = document.createElement('button');
@@ -70,15 +70,6 @@
     shareBtn.innerHTML = '<i data-lucide="share-2"></i> ' + t('action.share');
     shareBtn.addEventListener('click', () => share.open({ tool, query, result }));
     bar.appendChild(shareBtn);
-
-    if (aiPayload) {
-      const aiBtn = document.createElement('button');
-      aiBtn.className = 'button button-secondary';
-      aiBtn.type = 'button';
-      aiBtn.innerHTML = '<i data-lucide="sparkles"></i> ' + t('action.ai');
-      aiBtn.addEventListener('click', () => AI.run(aiBtn, tool, aiPayload, container));
-      bar.appendChild(aiBtn);
-    }
     container.insertBefore(bar, container.firstChild);
     if (window.lucide) lucide.createIcons();
     return bar;
@@ -126,69 +117,7 @@
     }
   });
 
-  // ---------- AI analysis (TODO 16) ----------
-  const AI = {
-    consentKey: 'netutils-ai-consent',
-    hasConsent() { return localStorage.getItem(this.consentKey) === 'yes'; },
-    async run(btn, tool, payload, container) {
-      if (!this.hasConsent()) {
-        if (!confirm(t('ai.consent'))) return;
-        localStorage.setItem(this.consentKey, 'yes');
-      }
-      btn.disabled = true;
-      btn.innerHTML = '<i data-lucide="loader"></i> ' + t('ai.working');
-      const panel = document.createElement('div');
-      panel.className = 'ai-panel';
-      panel.innerHTML = `<div class="ai-panel-head"><strong>${esc(t('ai.title'))}</strong><button type="button" class="copy-btn" data-copy="">Copy</button></div><div class="ai-content"><span class="ai-cursor">▍</span></div>`;
-      container.appendChild(panel);
-      const content = panel.querySelector('.ai-content');
-      const copyBtn = panel.querySelector('[data-copy]');
-      let full = '';
-      try {
-        const res = await fetch(`/api/ai?tool=${tool}&stream=1&data=${encodeURIComponent(JSON.stringify(payload))}`);
-        if (!res.ok) {
-          const j = await res.json().catch(() => ({}));
-          throw new Error(j.message || `HTTP ${res.status}`);
-        }
-        const reader = res.body.getReader();
-        const decoder = new TextDecoder();
-        let buffer = '';
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) break;
-          buffer += decoder.decode(value, { stream: true });
-          const lines = buffer.split('\n');
-          buffer = lines.pop();
-          for (const line of lines) {
-            if (!line.startsWith('data:')) continue;
-            const j = JSON.parse(line.slice(5).trim());
-            if (j.token) { full += j.token; content.innerHTML = miniMarkdown(full); content.scrollTop = content.scrollHeight; }
-            if (j.done) { copyBtn.dataset.copy = full; }
-          }
-        }
-        if (!full) content.textContent = t('ai.empty');
-      } catch (err) {
-        content.textContent = err.message;
-        copyBtn.style.display = 'none';
-      } finally {
-        btn.disabled = false;
-        btn.innerHTML = '<i data-lucide="sparkles"></i> ' + t('action.ai');
-        if (window.lucide) lucide.createIcons();
-      }
-    }
-  };
-
-  function miniMarkdown(text) {
-    return esc(text)
-      .replace(/^### (.*)$/gm, '<h4>$1</h4>')
-      .replace(/^## (.*)$/gm, '<h4>$1</h4>')
-      .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-      .replace(/(^|\n)- (.+)/g, '$1<span class="md-li">• $2</span>')
-      .replace(/`([^`]+)`/g, '<code>$1</code>')
-      .replace(/\n/g, '<br>');
-  }
-
-  // ---------- tabs ----------
+  // ---------- share (TODO 11) ----------
   document.querySelectorAll('.tab').forEach(tab => {
     tab.addEventListener('click', () => {
       document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
@@ -226,7 +155,7 @@
       ];
       const container = $('ip-result');
       dataGrid($('ip-data'), items);
-      actionBar(container, { tool: 'ip', query: q, result: d, aiPayload: d });
+      actionBar(container, { tool: 'ip', query: q, result: d});
       const plot = document.createElement('button');
       plot.type = 'button';
       plot.className = 'button button-secondary';
@@ -252,9 +181,9 @@
       hide('dns-loading');
       $('dns-domain').textContent = d.domain;
       const dnssecEl = $('dns-dnssec');
-      dnssecEl.className = 'badge';
+      const badgeClass = d.dnssec.status === 'validated' || d.dnssec.status === 'secure' ? 'badge-success' : d.dnssec.status === 'bogus' ? 'badge-error' : '';
+      if (badgeClass) dnssecEl.classList.add(badgeClass);
       dnssecEl.textContent = t(`dnssec.${d.dnssec.status || 'unknown'}`);
-      dnssecEl.classList.add(d.dnssec.status === 'validated' || d.dnssec.status === 'secure' ? 'badge-success' : d.dnssec.status === 'bogus' ? 'badge-error' : '');
 
       const flags = [];
       if (d.flags?.homograph) flags.push('<span class="chip chip-error">' + esc(t('dns.homograph')) + '</span>');
@@ -305,7 +234,7 @@
         resolversEl.appendChild(chip);
       }
 
-      actionBar($('dns-result'), { tool: 'dns', query: q, result: d, aiPayload: d });
+      actionBar($('dns-result'), { tool: 'dns', query: q, result: d});
       show('dns-result');
       History.add({ tool: 'dns', query: q, status: 'ok', result: d });
     } catch (err) { hide('dns-loading'); showError('dns-error', err.message); }
@@ -338,7 +267,7 @@
         tr.innerHTML = `<td>${esc(key)}</td><td class="mono">${esc(Array.isArray(value) ? value.join(', ') : String(value))}</td>`;
         tbody.appendChild(tr);
       }
-      actionBar($('headers-result'), { tool: 'headers', query: q, result: d, aiPayload: d });
+      actionBar($('headers-result'), { tool: 'headers', query: q, result: d});
       show('headers-result');
       History.add({ tool: 'headers', query: q, status: 'ok', result: d });
     } catch (err) { hide('headers-loading'); showError('headers-error', err.message); }
@@ -475,7 +404,7 @@
       });
 
       $('ssl-breakdown').innerHTML = (d.scoreBreakdown || []).map(b => `<div class="diff-row">${esc(b)}</div>`).join('') || '';
-      actionBar($('ssl-result'), { tool: 'ssl', query: q, result: d, aiPayload: d });
+      actionBar($('ssl-result'), { tool: 'ssl', query: q, result: d});
       show('ssl-result');
       History.add({ tool: 'ssl', query: q, status: 'ok', result: d });
     } catch (err) { hide('ssl-loading'); showError('ssl-error', err.message); }
@@ -539,7 +468,7 @@
         $('whois-raw').textContent = d.raw;
         show('whois-raw-wrap');
       } else hide('whois-raw-wrap');
-      actionBar($('whois-result'), { tool: 'whois', query: q, result: d, aiPayload: d });
+      actionBar($('whois-result'), { tool: 'whois', query: q, result: d});
       show('whois-result');
       History.add({ tool: 'whois', query: q, status: 'ok', result: d });
     } catch (err) { hide('whois-loading'); showError('whois-error', err.message); }
@@ -571,7 +500,7 @@
         row.addEventListener('click', () => { $('ip-input').value = s.name; document.querySelector('[data-target="card-ip"]').click(); runIp(s.name); });
         list.appendChild(row);
       });
-      actionBar($('ct-result'), { tool: 'ct', query: q, result: d, aiPayload: d });
+      actionBar($('ct-result'), { tool: 'ct', query: q, result: d});
       show('ct-result');
       History.add({ tool: 'ct', query: q, status: 'ok', result: d });
     } catch (err) { hide('ct-loading'); showError('ct-error', err.message); }

@@ -4,12 +4,12 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>API Documentation - NetUtils</title>
-  <meta name="description" content="Complete API documentation for NetUtils - IP, DNS, headers, port scan, SSL, WHOIS, CT, batch, share, AI. OpenAPI 3.1, playground, error codes.">
+  <meta name="description" content="Complete API documentation for NetUtils - IP, DNS, headers, port scan, SSL, WHOIS, CT, batch, share. OpenAPI 3.1, playground, error codes.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Inter:wght@400;500;600&family=Playfair+Display:wght@800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Playfair+Display:wght@800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/css/style.css">
-  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='18' fill='%23FAF9F6'/%3E%3Crect x='14' y='14' width='72' height='72' rx='12' fill='white' stroke='%23E6E3DC'/%3E%3Cpath d='M27 62V38h7l15 15V38h7v24h-7L34 47v15z' fill='%23635BFF'/%3E%3C/svg%3E">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='18' fill='%230B0B0D'/%3E%3Crect x='14' y='14' width='72' height='72' rx='12' fill='%23000' stroke='%23141418'/%3E%3Cpath d='M27 62V38h7l15 15V38h7v24h-7L34 47v15z' fill='%232563EB'/%3E%3C/svg%3E">
   <script>
     (function () {
       var stored = localStorage.getItem('netutils-theme') || 'system';
@@ -54,7 +54,6 @@
         <a href="#endpoint-ct">CT / Subdomains</a>
         <a href="#endpoint-scan">Batch Scan</a>
         <a href="#endpoint-share">Share Links</a>
-        <a href="#endpoint-ai">AI Report</a>
         <a href="#endpoint-ops">Health & Metrics</a>
         <a href="#playground">Playground</a>
         <a href="#errors">Error Codes</a>
@@ -74,7 +73,6 @@
           <a href="#endpoint-ct">CT / Subdomains</a>
           <a href="#endpoint-scan">Batch Scan</a>
           <a href="#endpoint-share">Share Links</a>
-          <a href="#endpoint-ai">AI Report</a>
           <a href="#endpoint-ops">Health & Metrics</a>
           <a href="#playground">Playground</a>
           <a href="#errors">Error Codes</a>
@@ -84,16 +82,16 @@
       </details>
 
       <!-- Mobile TOC -->
-      <details class="lg:hidden bg-slate-800 rounded-xl border border-slate-700/70 overflow-hidden">
-        <summary class="px-4 py-3 text-sm font-semibold text-slate-300 cursor-pointer hover:bg-slate-700/50 transition-colors">📖 Jump to Section</summary>
-        <div class="flex flex-col border-t border-slate-700/50">
-          <a href="#endpoint-ip" class="px-4 py-2 text-sm text-slate-400 hover:bg-slate-700/30 hover:text-sky-400 transition-colors no-underline">IP Info</a>
-          <a href="#endpoint-dns" class="px-4 py-2 text-sm text-slate-400 hover:bg-slate-700/30 hover:text-sky-400 transition-colors no-underline">DNS Lookup</a>
-          <a href="#endpoint-headers" class="px-4 py-2 text-sm text-slate-400 hover:bg-slate-700/30 hover:text-sky-400 transition-colors no-underline">HTTP Headers</a>
-          <a href="#endpoint-portscan" class="px-4 py-2 text-sm text-slate-400 hover:bg-slate-700/30 hover:text-sky-400 transition-colors no-underline">Port Scanner</a>
-          <a href="#endpoint-ssl" class="px-4 py-2 text-sm text-slate-400 hover:bg-slate-700/30 hover:text-sky-400 transition-colors no-underline">SSL Checker</a>
-          <a href="#errors" class="px-4 py-2 text-sm text-slate-400 hover:bg-slate-700/30 hover:text-sky-400 transition-colors no-underline">Error Codes</a>
-          <a href="#rate" class="px-4 py-2 text-sm text-slate-400 hover:bg-slate-700/30 hover:text-sky-400 transition-colors no-underline">Rate Limits</a>
+      <details class="lg:hidden bg-black rounded-xl border border-[#141418] overflow-hidden">
+        <summary class="px-4 py-3 text-sm font-semibold text-[#9CA3AF] cursor-pointer hover:bg-[#0B0B0D] transition-colors">📖 Jump to Section</summary>
+        <div class="flex flex-col border-t border-[#141418]">
+          <a href="#endpoint-ip" class="px-4 py-2 text-sm text-[#9CA3AF] hover:bg-[#0B0B0D] hover:text-[#2563EB] transition-colors no-underline">IP Info</a>
+          <a href="#endpoint-dns" class="px-4 py-2 text-sm text-[#9CA3AF] hover:bg-[#0B0B0D] hover:text-[#2563EB] transition-colors no-underline">DNS Lookup</a>
+          <a href="#endpoint-headers" class="px-4 py-2 text-sm text-[#9CA3AF] hover:bg-[#0B0B0D] hover:text-[#2563EB] transition-colors no-underline">HTTP Headers</a>
+          <a href="#endpoint-portscan" class="px-4 py-2 text-sm text-[#9CA3AF] hover:bg-[#0B0B0D] hover:text-[#2563EB] transition-colors no-underline">Port Scanner</a>
+          <a href="#endpoint-ssl" class="px-4 py-2 text-sm text-[#9CA3AF] hover:bg-[#0B0B0D] hover:text-[#2563EB] transition-colors no-underline">SSL Checker</a>
+          <a href="#errors" class="px-4 py-2 text-sm text-[#9CA3AF] hover:bg-[#0B0B0D] hover:text-[#2563EB] transition-colors no-underline">Error Codes</a>
+          <a href="#rate" class="px-4 py-2 text-sm text-[#9CA3AF] hover:bg-[#0B0B0D] hover:text-[#2563EB] transition-colors no-underline">Rate Limits</a>
         </div>
       </details>
 
@@ -182,13 +180,6 @@
           <p>Client-only mode: <code>#/share/{base64url-json}</code> renders without server round-trip.</p>
         </div>
 
-        <div class="doc-card" id="endpoint-ai">
-          <div class="endpoint-title"><span class="tag tag-get">GET</span><h3>AI Diagnostic Report</h3></div>
-          <div class="endpoint-url">GET /api/ai?tool={ip|dns|ssl|portscan|headers|whois|ct}&data={json-encoded-result}&stream=1</div>
-          <p>Generates a human-language diagnostic summary via an OpenAI-compatible provider. Requires <code>AI_API_KEY</code> env. Results cached 24h (zero re-bill), daily budget guardrail (<code>BUDGET_DAILY_USD</code>), circuit breaker on repeated failures.</p>
-          <p><strong>SSE:</strong> <code>?stream=1</code> streams <code>data: {"token": "..."}</code> chunks.</p>
-        </div>
-
         <div class="doc-card" id="endpoint-ops">
           <div class="endpoint-title"><span class="tag tag-get">GET</span><h3>Health & Metrics</h3></div>
           <div class="endpoint-url">GET /api/health</div>
@@ -263,7 +254,6 @@ Body: { "event":"scan.completed", "scanId":"...", "tool":"dns",
             <tr><td>/api/whois</td><td>20/min/IP</td><td>4</td></tr>
             <tr><td>/api/ct</td><td>10/min/IP</td><td>2</td></tr>
             <tr><td>/api/scan (create)</td><td>5/min/IP</td><td>2</td></tr>
-            <tr><td>/api/ai</td><td>5/min/IP</td><td>1</td></tr>
             <tr><td>/api/share, /api/health, /api/metrics</td><td>exempt / 30</td><td>10</td></tr>
           </tbody></table></div>
           <p>Sliding window (60s) + token bucket. Headers: <code>X-RateLimit-Limit</code>, <code>X-RateLimit-Remaining</code>, <code>Retry-After</code>. Client IP taken from the first <code>x-forwarded-for</code> value. Optional Upstash Redis backend via <code>UPSTASH_REDIS_REST_URL</code>.</p>

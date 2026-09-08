@@ -8,7 +8,6 @@ import whoisHandler from '../api/whois.js';
 import ctHandler from '../api/ct.js';
 import scanHandler from '../api/scan.js';
 import shareHandler from '../api/share.js';
-import aiHandler from '../api/ai.js';
 
 const apiHandlers = {
   '/api/ip': ipHandler,
@@ -20,7 +19,6 @@ const apiHandlers = {
   '/api/ct': ctHandler,
   '/api/scan': scanHandler,
   '/api/share': shareHandler,
-  '/api/ai': aiHandler,
 };
 
 function createResponseWrapper(originalRequest) {

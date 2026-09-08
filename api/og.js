@@ -22,12 +22,12 @@ export default async function handler(req, res) {
   const title = p ? `${p.tool} · ${p.query}` : 'NetUtils share link';
   const stat = p ? statFor(p) : 'Open this link to view the result';
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630">
-  <rect width="1200" height="630" fill="#0F0F0E"/>
-  <rect x="60" y="60" width="1080" height="510" rx="24" fill="#1A1A18" stroke="#2E2E2A"/>
-  <text x="100" y="160" font-family="Arial, sans-serif" font-size="44" font-weight="700" fill="#635BFF">NetUtils</text>
-  <text x="100" y="260" font-family="Arial, sans-serif" font-size="60" font-weight="700" fill="#F5F4F0">${escapeXml(title.slice(0, 58))}</text>
+  <rect width="1200" height="630" fill="#000000"/>
+  <rect x="60" y="60" width="1080" height="510" rx="24" fill="#0B0B0D" stroke="#141418"/>
+  <text x="100" y="160" font-family="Arial, sans-serif" font-size="44" font-weight="700" fill="#2563EB">NetUtils</text>
+  <text x="100" y="260" font-family="Arial, sans-serif" font-size="60" font-weight="700" fill="#FFFFFF">${escapeXml(title.slice(0, 58))}</text>
   <text x="100" y="360" font-family="Arial, sans-serif" font-size="36" fill="#9CA3AF">${escapeXml(stat.slice(0, 90))}</text>
-  <text x="100" y="470" font-family="Arial, sans-serif" font-size="26" fill="#706F68">Shared via NetUtils · expires after 7 days</text>
+  <text x="100" y="470" font-family="Arial, sans-serif" font-size="26" fill="#E8E8EC">Shared via NetUtils · expires after 7 days</text>
 </svg>`;
   res.setHeader('Content-Type', 'image/svg+xml');
   res.setHeader('Cache-Control', 'public, max-age=3600, s-maxage=86400');

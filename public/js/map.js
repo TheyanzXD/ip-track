@@ -38,10 +38,10 @@
       const w = canvas.clientWidth, h = canvas.clientHeight;
       ctx.clearRect(0, 0, w, h);
       const theme = document.documentElement.dataset.theme === 'dark' ? 'dark' : 'light';
-      ctx.fillStyle = theme === 'dark' ? '#141412' : '#eef2f6';
+      ctx.fillStyle = theme === 'dark' ? '#000000' : '#0B0B0D';
       ctx.fillRect(0, 0, w, h);
       // graticule
-      ctx.strokeStyle = theme === 'dark' ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.08)';
+      ctx.strokeStyle = theme === 'dark' ? 'rgba(255,255,255,0.06)' : 'rgba(255,255,255,0.06)';
       ctx.lineWidth = 1;
       for (let lon = -180; lon <= 180; lon += 30) {
         ctx.beginPath();
@@ -53,9 +53,9 @@
       }
       // borders
       const polys = worldBorders || COARSE_WORLD;
-      ctx.strokeStyle = theme === 'dark' ? '#2E2E2A' : '#c8d3dd';
+      ctx.strokeStyle = theme === 'dark' ? '#141418' : '#141418';
       ctx.lineWidth = 1;
-      ctx.fillStyle = theme === 'dark' ? '#1A1A18' : '#ffffff';
+      ctx.fillStyle = theme === 'dark' ? '#0B0B0D' : '#0B0B0D';
       for (const poly of polys) {
         ctx.beginPath();
         poly.points.forEach(([lat, lon], i) => {
@@ -72,12 +72,12 @@
         if (x < -30 || x > w + 30 || y < -30 || y > h + 30) return;
         ctx.beginPath();
         ctx.arc(x, y, 4, 0, Math.PI * 2);
-        ctx.fillStyle = '#635BFF';
+        ctx.fillStyle = '#2563EB';
         ctx.fill();
-        ctx.strokeStyle = '#ffffff';
+        ctx.strokeStyle = '#FFFFFF';
         ctx.lineWidth = 1.5;
         ctx.stroke();
-        ctx.fillStyle = theme === 'dark' ? '#F5F4F0' : '#18180f';
+        ctx.fillStyle = theme === 'dark' ? '#FFFFFF' : '#FFFFFF';
         ctx.font = '11px Inter, sans-serif';
         ctx.fillText(m.label || m.ip || '', x + 8, y + 4);
       });
