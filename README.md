@@ -1,7 +1,7 @@
 <p align="center">
   <img src="https://img.shields.io/badge/status-live-brightgreen?style=for-the-badge" alt="Status">
   <img src="https://img.shields.io/badge/node-%3E%3D18-blue?style=for-the-badge&logo=node.js" alt="Node">
-  <img src="https://img.shields.io/badge/tests-37%20passing-green?style=for-the-badge" alt="Tests">
+  <img src="https://img.shields.io/badge/tests-passing-green?style=for-the-badge" alt="Tests">
   <img src="https://img.shields.io/badge/license-MIT-purple?style=for-the-badge" alt="License">
 </p>
 
@@ -25,7 +25,7 @@
 
 ## 📖 Overview
 
-**NetUtils** is a lightweight, serverless network diagnostic toolkit built entirely on **native Node.js modules** — no third-party dependencies required. It bundles five essential networking tools behind a clean web UI and a simple JSON API, and deploys to [Vercel](https://vercel.com) in minutes.
+**NetUtils** is a lightweight, serverless network diagnostic toolkit built entirely on **native Node.js modules** — no third-party dependencies required. It bundles essential networking tools behind a clean web UI and a simple JSON API, and deploys to Cloudflare Workers in minutes.
 
 > [!TIP]
 > Every endpoint returns a consistent `{ status, message, data }` JSON shape, so it's easy to script against or plug into your own dashboard.
@@ -34,18 +34,17 @@
 
 ## ✨ Features
 
-| # | Tool | Description | API Endpoint |
+|| # | Tool | Description | API Endpoint |
 |---|------|-------------|--------------|
 | 🌐 | **IP Info** | Geolocation, ISP, ASN, proxy/VPN flags, multi-provider failover (ip-api → ipwho.is → ipinfo) | `GET /api/ip` |
 | 📡 | **DNS Lookup** | A/AAAA/MX/TXT/NS/CNAME/SOA/SRV across 3 DoH resolvers (Cloudflare/Google/Quad9), DNSSEC status, resolver diff (hijack detection) | `GET /api/dns` |
 | 📋 | **HTTP Headers** | Header analysis, redirect chain, security score | `GET /api/headers` |
 | 🔌 | **Port Scanner** | Concurrent engine (32 workers), custom ranges, banners, SSE live progress | `GET /api/portscan` |
 | 🔒 | **SSL Audit** | Chain walk, OCSP best-effort, TLS 1.0–1.3 matrix, cipher probe, score 0–100 + grade | `GET /api/ssl` |
-| 🏢 | **WHOIS/RDAP** | RDAP-first (IANA bootstrap) with raw whois:43 fallback, domain/IP/ASN | `GET /api/whois` |
+| 🏢 | **WHOIS/RDAP** | RDAP-first (IANA bootstrap), domain/IP/ASN | `GET /api/whois` |
 | 🧾 | **Cert Transparency** | Subdomain discovery via crt.sh + certspotter, issuance timeline | `GET /api/ct` |
 | ⚙️ | **Batch Scan** | Async jobs (200 items, concurrency 5, retry, webhook on complete) | `POST /api/scan` |
 | 🔗 | **Share Links** | 8-char Crockford codes, owner delete, SVG OG cards | `POST /api/share` |
-| 🤖 | **AI Reports** | Streaming diagnostic summaries (OpenAI-compatible, optional, opt-in) | `GET /api/ai` |
 
 Platform: i18n (EN/ID/ZH), dark mode + system sync, ⌘K command palette, geo map (zero-dep canvas), lookup history + CSV/JSON export, PWA (offline shell + last-result cache), shareable results, webhooks (HMAC-SHA256), structured logs with request IDs.
 
@@ -53,9 +52,7 @@ Platform: i18n (EN/ID/ZH), dark mode + system sync, ⌘K command palette, geo ma
 
 - **SSRF guard** (`lib/netguard.js`): IP classification (RFC1918, loopback, link-local, CGNAT, cloud metadata `169.254.169.254`, IPv6 ULA…), DNS rebinding detection (double resolve, 500ms apart), port allowlist, 5-hop redirect cap, punycode normalization, homograph/IDN-lookalike flags.
 - **Rate limiting** (`lib/ratelimit.js`): sliding window per-IP per-endpoint (default 30 req/min, burst 5), token bucket, `Retry-After` + `X-RateLimit-*` headers, optional Upstash Redis backend.
-- **Headers** (`vercel.json`): strict CSP, HSTS preload, `X-Frame-Options: DENY`, `nosniff`, `Referrer-Policy`, `Permissions-Policy`, COOP.
 - **Webhooks**: HMAC-SHA256 signature (`X-Webhook-Signature`), 3 retries with 1s/5s/30s backoff.
-- **AI guardrails**: daily USD budget (hard stop), 24h response cache, prompt-injection hardened.
 - Uniform error contract: `{ status: "error", code, message, data }` — codes: `BAD_REQUEST`, `INVALID_TARGET`, `BLOCKED_TARGET`, `REBINDING_DETECTED`, `UNRESOLVABLE`, `NOT_FOUND`, `RATE_LIMITED`, `UPSTREAM_ERROR`, `SERVICE_UNAVAILABLE`, `BUDGET_EXHAUSTED`.
 
 <br>
@@ -76,8 +73,8 @@ Platform: i18n (EN/ID/ZH), dark mode + system sync, ⌘K command palette, geo ma
 | Layer | Technology |
 |:---|:---|
 | Frontend | HTML5 · CSS3 (dark theme) · Vanilla JavaScript |
-| Backend | Node.js (built-in `dns`, `net`, `tls`, `http` modules) |
-| Hosting | Vercel Edge Network + Serverless Functions |
+| Backend | Cloudflare Workers (native `fetch`, Web Crypto, Durable primitives) |
+| Hosting | Cloudflare Workers + Cloudflare Assets |
 | Dependencies | **Zero** — no npm packages required |
 
 </div>
@@ -89,7 +86,7 @@ Platform: i18n (EN/ID/ZH), dark mode + system sync, ⌘K command palette, geo ma
 ### Prerequisites
 
 - [Node.js](https://nodejs.org/) ≥ 18
-- A free [Vercel](https://vercel.com) account (for deployment)
+- A free [Cloudflare](https://dash.cloudflare.com/profile/api-tokens) account (for deployment)
 
 ### Run Locally
 
@@ -98,42 +95,40 @@ Platform: i18n (EN/ID/ZH), dark mode + system sync, ⌘K command palette, geo ma
 git clone https://github.com/TheyanzXD/ip-track.git
 cd ip-track
 
-# Install the Vercel CLI
-npm i -g vercel
+# Install Wrangler
+npm install -g wrangler
 
-# Start the local dev server
-vercel dev
+# Start local Worker dev server
+wrangler dev
 ```
 
-The app will be available at `http://localhost:3000`.
+The app will be available at `http://localhost:8787`.
 
 <br>
 
 ## 📦 Deploy
 
 <details>
-<summary><b>Option A — Vercel CLI</b></summary>
+<summary><b>Option A — Wrangler CLI</b></summary>
 
 <br>
 
 ```bash
-npm i -g vercel
-vercel login
-vercel
-# Framework Preset: Other
+wrangler login
+wrangler deploy
 ```
 
 </details>
 
 <details>
-<summary><b>Option B — GitHub Import</b></summary>
+<summary><b>Option B — GitHub + Cloudflare</b></summary>
 
 <br>
 
 1. Push this repository to your own GitHub account
-2. Go to [vercel.com/new](https://vercel.com/new)
-3. Import the repo
-4. Set Framework Preset to **Other**
+2. Go to [Cloudflare Dashboard → Workers & Pages](https://dash.cloudflare.com/?to=/:account/workers)
+3. Connect GitHub repo
+4. Set build command: `npm run deploy` or `wrangler deploy`
 5. Click **Deploy** ✅
 
 </details>
@@ -148,8 +143,6 @@ All optional — zero config runs in-memory.
 |----------|---------|
 | `UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN` | Shared rate limits + share links + scan cache (memory fallback otherwise) |
 | `IPINFO_TOKEN` | Enable ipinfo.io as third IP provider |
-| `AI_API_KEY` / `AI_BASE_URL` / `AI_MODEL` | AI reports (OpenAI-compatible API) |
-| `BUDGET_DAILY_USD` | Daily AI spend cap (default 1.00) |
 | `SHARE_SECRET` | HMAC key for share owner tokens (auto-generated per cold start otherwise) |
 | `LOG_LEVEL` | `debug` / `info` / `warn` / `error` (default `info`) |
 
@@ -240,6 +233,7 @@ All endpoints return JSON `{ status, message, data }` (errors: `{ status: "error
 ```
 
 ### `GET /api/whois`
+
 ```
 /api/whois?data=example.com      # domain
 /api/whois?data=8.8.8.8          # IP range (inetnum)
@@ -247,11 +241,13 @@ All endpoints return JSON `{ status, message, data }` (errors: `{ status: "error
 ```
 
 ### `GET /api/ct`
+
 ```
 /api/ct?data=example.com
 ```
 
 ### `POST /api/scan` — batch jobs
+
 ```json
 {
   "tool": "dns",
@@ -260,31 +256,30 @@ All endpoints return JSON `{ status, message, data }` (errors: `{ status: "error
   "webhookSecret": "optional-hmac-secret"
 }
 ```
+
 Poll `GET /api/scan?jobId=...`, stream `GET /api/scan?jobId=...&stream=1`, abort `?abort=1`.
 
 ### `POST /api/share` — share links
+
 ```json
 { "payload": { "tool": "ssl", "query": "example.com", "result": { } } }
 ```
+
 → `{ code: "8CHARS", url: "/#/share/8CHARS", expiresAt }` (TTL 7 days). Preview card: `GET /api/og?code=...`.
 
-### `GET /api/ai` — AI report (SSE streaming)
-```
-/api/ai?tool=ssl&data=<urlencoded-json>&stream=1
-```
-
 ### Platform
-```
+
+``` 
 GET /api/health    → upstream reachability + memory + uptime (503 degraded)
 GET /api/metrics   → rate-limit stats, cache hits, error count
 ```
 
-> 📖 Full interactive docs at [`/docs`](https://your-domain.vercel.app/docs) · machine-readable spec at `/openapi.json`
+> 📖 Full interactive docs at [`/docs`](https://your-worker.workers.dev/docs) · machine-readable spec at `/openapi.json`
 
 ## 🧪 Testing
 
 ```bash
-npm test          # node --test, 37 tests across 5 suites
+npm test          # node --test suites
 npm run check     # syntax check on generator scripts
 ```
 
@@ -293,8 +288,8 @@ Coverage: `netguard` (SSRF classification, punycode, target parsing, port guard)
 ## 📁 Project Structure
 
 ```
-📦 network-utils
-├── 📄 index.html            # Main app (9 tools + palette + share modal)
+📦 ip-track
+├── 📄 index.html            # Main app (tools + palette + share modal)
 ├── 📄 docs.html             # Interactive API docs + playground
 ├── 📄 manifest.webmanifest  # PWA manifest
 ├── 📄 sw.js                 # Service worker (precache + offline snapshots)
@@ -311,8 +306,8 @@ Coverage: `netguard` (SSRF classification, punycode, target parsing, port guard)
 ├── 🌐 locales/{en,id,zh}.json
 ├── 🖥️ api/
 │   ├── ip.js dns.js headers.js portscan.js ssl.js
-│   ├── whois.js ct.js scan.js share.js og.js ai.js
-│   └── health.js metrics.js
+│   ├── whois.js ct.js scan.js share.js og.js health.js
+│   └── metrics.js
 ├── 📚 lib/
 │   ├── netguard.js          # SSRF guard + input validation
 │   ├── ratelimit.js         # Sliding window + burst
@@ -320,18 +315,19 @@ Coverage: `netguard` (SSRF classification, punycode, target parsing, port guard)
 │   ├── validator.js         # Zero-dep JSON-schema subset
 │   ├── schemas.js           # Response schema source of truth
 │   ├── ipintel.js doh.js dnscache.js        # DNS + IP engines
-│   ├── scanner.js scanstore.js jobs.js      # Scan engines
+│   ├── scanner.js jobs.js      # Scan engines
 │   ├── sslprobe.js rdap.js ct.js            # SSL/WHOIS/CT engines
-│   ├── kv.js webhooks.js ai.js homograph.js # Platform services
+│   ├── kv.js webhooks.js homograph.js # Platform services
 │   └── logger.js            # Structured JSON logs + requestId
-├── 🧪 test/                 # node --test suites (37 tests)
+├── 🧪 test/                 # node --test suites
 ├── ⚙️ .github/workflows/ci.yml
+├── ⚙️ .github/workflows/deploy.yml
 ├── 📦 package.json          # Zero dependencies
-└── ⚙️ vercel.json           # Security headers + rewrites
+└── ⚙️ wrangler.toml         # Cloudflare Workers config
 ```
 
 <br>
 
-> **IP Grabber:** Shows your own IP or domains you own. Not for tracking without consent.
+> **IP Lookup:** Shows your own IP or domains you own. Not for tracking without consent.
 > **Port Scanner:** Only scan systems you own or have written permission to test.
-> **Privacy:** Lookups are ephemeral. Share links store only the payload you explicitly publish (TTL 7 days, owner-deletable). History, theme, and language stay in your browser's localStorage. AI reports are opt-in and cached server-side for 24h only.
+> **Privacy:** Lookups are ephemeral. Share links store only the payload you explicitly publish (TTL 7 days, owner-deletable). History, theme, and language stay in your browser's localStorage.

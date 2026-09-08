@@ -5,6 +5,25 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.0] - 2026-09-08
+
+### Fixed
+- **HIGH:** Removed broken `/api/ai` endpoint and all frontend/docs/OpenAPI references to prevent 503/404 failures
+- **HIGH:** Fixed DNS UI crash `Failed to execute 'add' on 'DOMTokenList': The token provided must not be empty.` caused by empty DNSSEC badge class
+- **HIGH:** Fixed WHOIS/RDAP runtime error `rdapCache is not defined` by ensuring cache import is available in `lib/rdap.js`
+- **HIGH:** Fixed batch scan JSON parsing `req.on is not a function` / `req.json is not a function` by using Worker-compatible body parsing
+- **HIGH:** Fixed share link JSON parsing using same Worker-compatible body parsing path
+
+### Changed
+- Upgraded UI design system to match Yandez dark theme (`#000000` / `#0B0B0D` / `#141418` / `#2563EB`)
+- Replaced Geist font stack with Inter + JetBrains Mono
+- Removed AI module from action bars, docs, and OpenAPI spec
+- Light theme tokens aligned with dark theme base contrast rules
+
+### Security
+- Removed unused AI module surface area
+- Consistent JSON error contract preserved across repaired endpoints
+
 ## [1.1.0] - 2026-08-04
 
 ### Fixed
