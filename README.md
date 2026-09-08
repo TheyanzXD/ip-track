@@ -9,7 +9,7 @@
   <h1>🌐 NetUtils</h1>
   <h3>⚡ Network Diagnostic Toolkit — Zero Dependencies ⚡</h3>
   <p>
-    <strong>IP Geolocation · DNS Multi-Resolver · HTTP Headers · Port Scanner · SSL/TLS Audit · WHOIS/RDAP · CT Subdomains · Batch Jobs</strong>
+    <strong>IP Geolocation · HTTP Headers · Port Scanner · SSL/TLS Audit · WHOIS/RDAP · CT Subdomains · Batch Jobs</strong>
   </p>
   <p>
     <a href="#-features">Features</a> •
@@ -34,7 +34,7 @@
 
 ## ✨ Features
 
-|| # | Tool | Description | API Endpoint |
+| # | Tool | Description | API Endpoint |
 |---|------|-------------|--------------|
 | 🌐 | **IP Info** | Geolocation, ISP, ASN, proxy/VPN flags, multi-provider failover (ip-api → ipwho.is → ipinfo) | `GET /api/ip` |
 | 📡 | **DNS Lookup** | A/AAAA/MX/TXT/NS/CNAME/SOA/SRV across 3 DoH resolvers (Cloudflare/Google/Quad9), DNSSEC status, resolver diff (hijack detection) | `GET /api/dns` |
@@ -269,7 +269,7 @@ Poll `GET /api/scan?jobId=...`, stream `GET /api/scan?jobId=...&stream=1`, abort
 
 ### Platform
 
-``` 
+```
 GET /api/health    → upstream reachability + memory + uptime (503 degraded)
 GET /api/metrics   → rate-limit stats, cache hits, error count
 ```
