@@ -81,6 +81,9 @@ export default {
       query: Object.fromEntries(url.searchParams.entries()),
       headers: Object.fromEntries(request.headers.entries()),
       socket: { remoteAddress: request.headers.get('cf-connecting-ip') || '' },
+      json: async () => {
+        try { return await request.json(); } catch { return null; }
+      }
     };
 
     const res = createResponseWrapper(req);
