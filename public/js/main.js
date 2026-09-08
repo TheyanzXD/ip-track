@@ -2,7 +2,7 @@
 (function () {
   'use strict';
 
-  const TOOLS = ['ip', 'dns', 'headers', 'portscan', 'ssl', 'whois', 'ct'];
+  const TOOLS = ['ip', 'headers', 'portscan', 'ssl', 'whois', 'ct'];
   const $ = (id) => document.getElementById(id);
   const esc = (s) => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const t = (k, v) => (window.I18n ? window.I18n.t(k, v) : k);
@@ -168,76 +168,6 @@
       show('ip-result');
       History.add({ tool: 'ip', query: q, status: 'ok', result: d });
     } catch (err) { hide('ip-loading'); showError('ip-error', err.message); History.add({ tool: 'ip', query: q, status: 'error', result: { error: err.message } }); }
-  }
-
-  // ---------- DNS ----------
-  async function runDns(query) {
-    const q = query ?? $('dns-input').value.trim();
-    const type = $('dns-type').value;
-    if (!q) { showError('dns-error', t('err.required')); return; }
-    hide('dns-error'); hide('dns-result'); setLoading('dns-loading', true);
-    try {
-      const d = await apiCall(`/api/dns?data=${encodeURIComponent(q)}&type=${type}`);
-      hide('dns-loading');
-      $('dns-domain').textContent = d.domain;
-      const dnssecEl = $('dns-dnssec');
-      const badgeClass = d.dnssec.status === 'validated' || d.dnssec.status === 'secure' ? 'badge-success' : d.dnssec.status === 'bogus' ? 'badge-error' : '';
-      if (badgeClass) dnssecEl.classList.add(badgeClass);
-      dnssecEl.textContent = t(`dnssec.${d.dnssec.status || 'unknown'}`);
-
-      const flags = [];
-      if (d.flags?.homograph) flags.push('<span class="chip chip-error">' + esc(t('dns.homograph')) + '</span>');
-      if (d.flags?.punycode) flags.push('<span class="chip">IDN / punycode</span>');
-      $('dns-flags').innerHTML = flags.join(' ');
-
-      const container = $('dns-records');
-      container.innerHTML = '';
-      const typeLabels = { A: 'A (IPv4)', AAAA: 'AAAA (IPv6)', MX: 'MX', TXT: 'TXT', NS: 'NS', CNAME: 'CNAME', SOA: 'SOA', SRV: 'SRV' };
-      let has = false;
-      for (const [typeName, records] of Object.entries(d.records || {})) {
-        if (!records || (Array.isArray(records) && records.length === 0)) continue;
-        has = true;
-        let html = `<div class="dns-section"><h3>${typeLabels[typeName] || typeName} ${esc(t('dns.records'))}</h3><div class="dns-records">`;
-        const recs = Array.isArray(records) ? records : [records];
-        for (const r of recs) {
-          if (typeName === 'MX') html += `<div class="dns-record"><span class="record-type record-${typeName}">MX</span>${esc(r.exchange)} (priority ${r.priority}, TTL ${r.ttl ?? '?'})</div>`;
-          else if (typeName === 'SOA') html += `<div class="dns-record"><span class="record-type record-SOA">SOA</span>${esc(r.nsname)} · ${esc(r.hostmaster)} · serial ${r.serial}</div>`;
-          else if (typeName === 'SRV') html += `<div class="dns-record"><span class="record-type record-SRV">SRV</span>${esc(r.name)}:${r.port} (prio ${r.priority}, weight ${r.weight})</div>`;
-          else html += `<div class="dns-record"><span class="record-type record-${typeName}">${typeName}</span>${esc(r.value ?? r.exchange ?? r.nsname ?? JSON.stringify(r))}${r.ttl ? ` <span class="ttl">TTL ${r.ttl}</span>` : ''}</div>`;
-        }
-        html += '</div></div>';
-        container.insertAdjacentHTML('beforeend', html);
-      }
-      if (!has) container.innerHTML = `<p class="empty">${esc(t('dns.none'))}</p>`;
-
-      const diff = $('dns-diff');
-      diff.innerHTML = '';
-      if (d.resolverDiff && d.resolverDiff.length) {
-        diff.innerHTML = `<h3 class="result-subtitle">⚠️ ${esc(t('dns.diffTitle'))}</h3>`;
-        const table = document.createElement('div');
-        table.className = 'diff-list';
-        d.resolverDiff.slice(0, 12).forEach(x => {
-          const row = document.createElement('div');
-          row.className = 'diff-row';
-          row.innerHTML = `<span class="record-type record-info">${esc(x.type)}</span><span class="mono">${esc(x.value)}</span><span class="diff-missing">${esc(t('dns.missingIn'))}: ${x.missingIn.join(', ')}</span>`;
-          table.appendChild(row);
-        });
-        diff.appendChild(table);
-      }
-
-      const resolversEl = $('dns-resolvers');
-      resolversEl.innerHTML = '';
-      for (const [id, r] of Object.entries(d.resolvers || {})) {
-        const chip = document.createElement('span');
-        chip.className = 'chip';
-        chip.textContent = `${id}${r.dnssec?.ad ? ' ✓AD' : ''}`;
-        resolversEl.appendChild(chip);
-      }
-
-      actionBar($('dns-result'), { tool: 'dns', query: q, result: d});
-      show('dns-result');
-      History.add({ tool: 'dns', query: q, status: 'ok', result: d });
-    } catch (err) { hide('dns-loading'); showError('dns-error', err.message); }
   }
 
   // ---------- Headers ----------
@@ -657,7 +587,7 @@
       chip.textContent = h.query;
       chip.title = h.resultPreview || '';
       chip.addEventListener('click', () => {
-        const actions = { ip: runIp, dns: runDns, headers: runHeaders, portscan: runPortscan, ssl: runSsl, whois: runWhois, ct: runCt };
+        const actions = { ip: runIp, headers: runHeaders, portscan: runPortscan, ssl: runSsl, whois: runWhois, ct: runCt };
         actions[h.type]?.(h.query);
       });
       el.appendChild(chip);
@@ -671,7 +601,7 @@
   }
 
   document.addEventListener('historychange', () => {
-    ['ip', 'dns', 'headers', 'portscan', 'ssl', 'whois', 'ct'].forEach((tool, i) => renderRecent(tool, ['ip-recent', 'dns-recent', 'headers-recent', 'portscan-recent', 'ssl-recent', 'whois-recent', 'ct-recent'][i]));
+    ['ip', 'headers', 'portscan', 'ssl', 'whois', 'ct'].forEach((tool, i) => renderRecent(tool, ['ip-recent', 'headers-recent', 'portscan-recent', 'ssl-recent', 'whois-recent', 'ct-recent'][i]));
   });
 
   document.addEventListener('click', e => {
@@ -690,7 +620,6 @@
   function registerPalette() {
     const run = (id) => document.querySelector(`[data-target="${id}"]`)?.click();
     Palette.register('switch-ip', { title: 'IP Info', keywords: 'ip lookup', run: () => run('card-ip') });
-    Palette.register('switch-dns', { title: 'DNS Lookup', keywords: 'dns records', run: () => run('card-dns') });
     Palette.register('switch-headers', { title: 'HTTP Headers', keywords: 'headers http', run: () => run('card-headers') });
     Palette.register('switch-portscan', { title: 'Port Scan', keywords: 'portscan ports', run: () => run('card-portscan') });
     Palette.register('switch-ssl', { title: 'SSL Check', keywords: 'ssl tls cert', run: () => run('card-ssl') });
@@ -722,7 +651,6 @@
   // ---------- wire up ----------
   function wire() {
     $('ip-lookup-btn').addEventListener('click', () => runIp());
-    $('dns-lookup-btn').addEventListener('click', () => runDns());
     $('headers-lookup-btn').addEventListener('click', () => runHeaders());
     $('portscan-btn').addEventListener('click', () => runPortscan());
     $('ssl-check-btn').addEventListener('click', () => runSsl());
@@ -731,9 +659,9 @@
     $('batch-run-btn').addEventListener('click', runBatch);
     $('batch-cancel').addEventListener('click', () => { batchEs?.close(); batchEs = null; setLoading('batch-loading', false); });
     $('portscan-cancel').addEventListener('click', () => { scanEs?.close(); scanEs = null; setLoading('portscan-loading', false); $('portscan-cancel').style.display = 'none'; });
-    ['ip', 'dns', 'headers', 'portscan', 'ssl', 'whois', 'ct'].forEach(tool => {
+    ['ip', 'headers', 'portscan', 'ssl', 'whois', 'ct'].forEach(tool => {
       const input = $(`${tool}-input`);
-      if (input) input.addEventListener('keydown', e => { if (e.key === 'Enter') { const btns = { ip: 'ip-lookup-btn', dns: 'dns-lookup-btn', headers: 'headers-lookup-btn', portscan: 'portscan-btn', ssl: 'ssl-check-btn', whois: 'whois-lookup-btn', ct: 'ct-lookup-btn' }; $(btns[tool])?.click(); } });
+      if (input) input.addEventListener('keydown', e => { if (e.key === 'Enter') { const btns = { ip: 'ip-lookup-btn', headers: 'headers-lookup-btn', portscan: 'portscan-btn', ssl: 'ssl-check-btn', whois: 'whois-lookup-btn', ct: 'ct-lookup-btn' }; $(btns[tool])?.click(); } });
     });
     const themeBtn = $('theme-toggle');
     if (themeBtn) themeBtn.addEventListener('click', () => { const m = Theme.cycle(); toast(`${t('theme.mode')}: ${m}`); });
@@ -756,7 +684,7 @@
     const payload = await share.resolveLocal(m[1]);
     if (!payload || !payload.tool) return;
     toast(`Shared result: ${payload.tool} · ${payload.query}`);
-    const tab = { ip: 'card-ip', dns: 'card-dns', headers: 'card-headers', portscan: 'card-portscan', ssl: 'card-ssl', whois: 'card-whois', ct: 'card-ct' }[payload.tool];
+    const tab = { ip: 'card-ip', headers: 'card-headers', portscan: 'card-portscan', ssl: 'card-ssl', whois: 'card-whois', ct: 'card-ct' }[payload.tool];
     if (tab) document.querySelector(`[data-target="${tab}"]`)?.click();
   }
 
@@ -779,5 +707,5 @@
     } catch { /* auto-detect best effort */ }
   });
 
-  window.NetUtils = { runIp, runDns, runHeaders, runPortscan, runSsl, runWhois, runCt, MapModule };
+  window.NetUtils = { runIp, runHeaders, runPortscan, runSsl, runWhois, runCt, MapModule };
 })();

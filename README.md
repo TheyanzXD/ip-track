@@ -1,7 +1,7 @@
 <p align="center">
   <img src="https://img.shields.io/badge/status-live-brightgreen?style=for-the-badge" alt="Status">
   <img src="https://img.shields.io/badge/node-%3E%3D18-blue?style=for-the-badge&logo=node.js" alt="Node">
-  <img src="https://img.shields.io/badge/tests-passing-green?style=for-the-badge" alt="Tests">
+  <img src="https://img.shields.io/badge/tests-36%2F37%20passing-yellow?style=for-the-badge" alt="Tests">
   <img src="https://img.shields.io/badge/license-MIT-purple?style=for-the-badge" alt="License">
 </p>
 
@@ -25,7 +25,7 @@
 
 ## 📖 Overview
 
-**NetUtils** is a lightweight, serverless network diagnostic toolkit built entirely on **native Node.js modules** — no third-party dependencies required. It bundles essential networking tools behind a clean web UI and a simple JSON API, and deploys to Cloudflare Workers in minutes.
+**NetUtils** is a lightweight, serverless network diagnostic toolkit built for **Cloudflare Workers** — no third-party dependencies required. It bundles essential networking tools behind a clean web UI and a simple JSON API.
 
 > [!TIP]
 > Every endpoint returns a consistent `{ status, message, data }` JSON shape, so it's easy to script against or plug into your own dashboard.
@@ -39,7 +39,7 @@
 | 🌐 | **IP Info** | Geolocation, ISP, ASN, proxy/VPN flags, multi-provider failover (ip-api → ipwho.is → ipinfo) | `GET /api/ip` |
 | 📡 | **DNS Lookup** | A/AAAA/MX/TXT/NS/CNAME/SOA/SRV across 3 DoH resolvers (Cloudflare/Google/Quad9), DNSSEC status, resolver diff (hijack detection) | `GET /api/dns` |
 | 📋 | **HTTP Headers** | Header analysis, redirect chain, security score | `GET /api/headers` |
-| 🔌 | **Port Scanner** | Concurrent engine (32 workers), custom ranges, banners, SSE live progress | `GET /api/portscan` |
+| 🔌 | **Port Scanner** | Concurrent engine, custom ranges, banners, SSE live progress | `GET /api/portscan` |
 | 🔒 | **SSL Audit** | Chain walk, OCSP best-effort, TLS 1.0–1.3 matrix, cipher probe, score 0–100 + grade | `GET /api/ssl` |
 | 🏢 | **WHOIS/RDAP** | RDAP-first (IANA bootstrap), domain/IP/ASN | `GET /api/whois` |
 | 🧾 | **Cert Transparency** | Subdomain discovery via crt.sh + certspotter, issuance timeline | `GET /api/ct` |
@@ -53,7 +53,7 @@ Platform: i18n (EN/ID/ZH), dark mode + system sync, ⌘K command palette, geo ma
 - **SSRF guard** (`lib/netguard.js`): IP classification (RFC1918, loopback, link-local, CGNAT, cloud metadata `169.254.169.254`, IPv6 ULA…), DNS rebinding detection (double resolve, 500ms apart), port allowlist, 5-hop redirect cap, punycode normalization, homograph/IDN-lookalike flags.
 - **Rate limiting** (`lib/ratelimit.js`): sliding window per-IP per-endpoint (default 30 req/min, burst 5), token bucket, `Retry-After` + `X-RateLimit-*` headers, optional Upstash Redis backend.
 - **Webhooks**: HMAC-SHA256 signature (`X-Webhook-Signature`), 3 retries with 1s/5s/30s backoff.
-- Uniform error contract: `{ status: "error", code, message, data }` — codes: `BAD_REQUEST`, `INVALID_TARGET`, `BLOCKED_TARGET`, `REBINDING_DETECTED`, `UNRESOLVABLE`, `NOT_FOUND`, `RATE_LIMITED`, `UPSTREAM_ERROR`, `SERVICE_UNAVAILABLE`, `BUDGET_EXHAUSTED`.
+- Uniform error contract: `{ status: "error", code, message, data }` — codes: `BAD_REQUEST`, `INVALID_TARGET`, `BLOCKED_TARGET`, `REBINDING_DETECTED`, `UNRESOLVABLE`, `NOT_FOUND`, `RATE_LIMITED`, `UPSTREAM_ERROR`, `SERVICE_UNAVAILABLE`.
 
 <br>
 
@@ -72,8 +72,8 @@ Platform: i18n (EN/ID/ZH), dark mode + system sync, ⌘K command palette, geo ma
 
 | Layer | Technology |
 |:---|:---|
-| Frontend | HTML5 · CSS3 (dark theme) · Vanilla JavaScript |
-| Backend | Cloudflare Workers (native `fetch`, Web Crypto, Durable primitives) |
+| Frontend | HTML5 · CSS3 · Vanilla JavaScript |
+| Backend | Cloudflare Workers (`fetch`, Web Crypto, Durable primitives) |
 | Hosting | Cloudflare Workers + Cloudflare Assets |
 | Dependencies | **Zero** — no npm packages required |
 

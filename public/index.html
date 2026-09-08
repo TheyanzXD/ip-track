@@ -63,8 +63,7 @@
     </section>
 
     <nav class="tabs" role="tablist" aria-label="Network utilities">
-      <button class="tab active" type="button" data-target="card-ip"><i data-lucide="globe-2"></i> IP Info</button>
-      <button class="tab" type="button" data-target="card-dns"><i data-lucide="radio-tower"></i> DNS Lookup</button>
+      <button class="tab" type="button" data-target="card-ip"><i data-lucide="globe-2"></i> IP Info</button>
       <button class="tab" type="button" data-target="card-headers"><i data-lucide="list-tree"></i> HTTP Headers</button>
       <button class="tab" type="button" data-target="card-portscan"><i data-lucide="scan-line"></i> Port Scan</button>
       <button class="tab" type="button" data-target="card-ssl"><i data-lucide="lock-keyhole"></i> SSL Check</button>
@@ -100,52 +99,6 @@
         <div class="result" id="ip-result" role="region" aria-live="polite">
           <div class="result-header"><span class="badge badge-success">Data Retrieved</span></div>
           <div class="data-grid" id="ip-data"></div>
-        </div>
-      </div>
-    </section>
-
-    <section class="card" id="card-dns" role="tabpanel">
-      <div class="tool-panel">
-        <div class="tool-header">
-          <span class="tool-icon"><i data-lucide="radio-tower"></i></span>
-          <div>
-            <h2>DNS Lookup — Multi-Resolvers</h2>
-            <p>Queries Cloudflare, Google and Quad9 over DNS-over-HTTPS with DNSSEC status and cross-resolver diff.</p>
-          </div>
-        </div>
-        <div class="form-grid form-grid-3">
-          <label class="form-field">
-            <span class="form-label">Domain</span>
-            <input class="input-text" type="text" id="dns-input" placeholder="example.com" autocomplete="off">
-          </label>
-          <label class="form-field">
-            <span class="form-label">Record Type</span>
-            <select class="input-select" id="dns-type">
-              <option value="ALL">All Records</option>
-              <option value="A">A (IPv4)</option>
-              <option value="AAAA">AAAA (IPv6)</option>
-              <option value="MX">MX (Mail Exchange)</option>
-              <option value="TXT">TXT (Text)</option>
-              <option value="NS">NS (Nameserver)</option>
-              <option value="CNAME">CNAME (Canonical Name)</option>
-              <option value="SOA">SOA (Start of Authority)</option>
-              <option value="SRV">SRV (Service)</option>
-            </select>
-          </label>
-          <button class="button button-primary btn btn-primary" type="button" id="dns-lookup-btn" data-loading="dns-loading"><i data-lucide="search"></i> Lookup</button>
-        </div>
-        <div class="recent-strip" id="dns-recent"></div>
-        <div class="loading" id="dns-loading" role="status" aria-live="polite"><span class="spinner" aria-hidden="true"></span><span>Querying 3 resolvers…</span></div>
-        <div class="error" id="dns-error" role="alert"></div>
-        <div class="result" id="dns-result" role="region" aria-live="polite">
-          <div class="result-header">
-            <span class="badge badge-success">DNS Records for <span id="dns-domain"></span></span>
-            <span class="badge" id="dns-dnssec"></span>
-          </div>
-          <div id="dns-flags"></div>
-          <div class="chip-row" id="dns-resolvers"></div>
-          <div id="dns-diff"></div>
-          <div id="dns-records"></div>
         </div>
       </div>
     </section>
